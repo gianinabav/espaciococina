@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { armarListas, calcularSobrantes, itemsAComprar, linkCarrito } from '../src/lib/compras.js'
+import { armarListas, calcularSobrantes, itemsAComprar, linkCarrito, linkRappi } from '../src/lib/compras.js'
 
 const usuario = { pais: 'PE', zona: 'Miraflores' }
 const receta = {
@@ -86,4 +86,10 @@ test('arma el link que llena el carrito solo con productos en línea', () => {
   assert.equal(link.url, 'https://www.wong.pe/checkout/cart/add?sku=43931&qty=2&seller=1&sc=1')
   assert.equal(link.faltan, 1)
   assert.equal(linkCarrito({ ...carrito, lugar: { web: 'https://www.vea.com.ar' } }), null)
+})
+
+test('lleva cada producto a Rappi Turbo en Perú y a la búsqueda de Rappi en otros países', () => {
+  assert.equal(linkRappi('ají panca', 'PE'), 'https://www.rappi.com.pe/tiendas/27352-turbo/s?term=aj%C3%AD%20panca')
+  assert.equal(linkRappi('arroz', 'MX'), 'https://www.rappi.com.mx/search?query=arroz')
+  assert.equal(linkRappi('arroz', 'ES'), null)
 })

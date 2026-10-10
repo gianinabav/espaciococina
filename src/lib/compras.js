@@ -265,3 +265,18 @@ export function linkCarrito(carrito) {
   const params = conCodigo.flatMap((it) => [`sku=${encodeURIComponent(it.producto.sku)}`, `qty=${Math.max(1, it.paquetes || 1)}`, `seller=${encodeURIComponent(it.producto.vendedor ?? '1')}`])
   return { url: `${carrito.lugar.web}/checkout/cart/add?${params.join('&')}&sc=1`, incluidos: conCodigo.length, faltan: carrito.items.length - conCodigo.length }
 }
+
+// Rappi no deja abrir un carrito ya lleno, pero sí abrir la búsqueda de un producto.
+// Con la app de Rappi instalada, el link abre la app (enlaces universales) en ese producto.
+// En Perú se busca dentro de la tienda Turbo (27352, la misma en todo Lima); en el resto, en todo Rappi.
+const RAPPI = { PE: 'rappi.com.pe', MX: 'rappi.com.mx', CO: 'rappi.com.co', AR: 'rappi.com.ar', CL: 'rappi.cl', EC: 'rappi.com.ec', BR: 'rappi.com.br' }
+
+export function hayRappi(pais) {
+  return Boolean(RAPPI[pais])
+}
+
+export function linkRappi(termino, pais) {
+  const q = encodeURIComponent(termino)
+  if (pais === 'PE') return `https://www.rappi.com.pe/tiendas/27352-turbo/s?term=${q}`
+  return RAPPI[pais] ? `https://www.${RAPPI[pais]}/search?query=${q}` : null
+}

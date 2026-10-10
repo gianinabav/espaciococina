@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
 import { PAISES, enumerar } from '../lib/datos.js'
 import { enviar } from '../lib/api.js'
-import { armarListas, itemsAComprar, formatoDinero, formatoCantidad, claveCatalogo, linkCarrito } from '../lib/compras.js'
+import { armarListas, itemsAComprar, formatoDinero, formatoCantidad, claveCatalogo, linkCarrito, hayRappi } from '../lib/compras.js'
 import { Aviso, Miniatura, SelectorPorciones } from './comunes.jsx'
 import ListaGuardable from './ListaGuardable.jsx'
+import PedirEnRappi from './PedirEnRappi.jsx'
 
 
 export default function Compras({ sesion, perfil, actualizar, ir, compartir, cambiarPorciones, tiendas, cargarTiendas, estadoServidor }) {
@@ -19,6 +20,7 @@ export default function Compras({ sesion, perfil, actualizar, ir, compartir, cam
   const [buscando, setBuscando] = useState(false)
   const [errorPrecios, setErrorPrecios] = useState('')
   const [verLista, setVerLista] = useState(false)
+  const [verRappi, setVerRappi] = useState(false)
 
   // Precios reales: se piden cuando cambia la lista (porciones, "ya lo tengo", alternativas).
   useEffect(() => {
@@ -228,7 +230,7 @@ export default function Compras({ sesion, perfil, actualizar, ir, compartir, cam
               </span>
               <h3>Pídelo en línea</h3>
               {enLinea.length ? (
-                <p>Abrimos la web del supermercado con tu carrito ya lleno. Solo revisas y pagas.</p>
+                <p>Abrimos la web del supermercado con tu carrito ya lleno. Solo revisas y pagas. O pídelo por delivery en Rappi, producto por producto.</p>
               ) : (
                 <p>{cadenasPais.length ? 'Esta tienda no permite llenar el carrito desde un link: guarda tu lista y búscala en su web.' : `En ${pais.nombre} no hay supermercados con catálogo en línea gratuito: guarda tu lista y úsala en tu app de delivery.`}</p>
               )}
@@ -238,6 +240,11 @@ export default function Compras({ sesion, perfil, actualizar, ir, compartir, cam
                     Llenar mi carrito en {c.lugar.nombre}
                   </a>
                 ))}
+                {hayRappi(perfil.pais) && (
+                  <button className="boton secundario" onClick={() => setVerRappi(true)}>
+                    Pedir en {perfil.pais === 'PE' ? 'Rappi Turbo' : 'Rappi'}
+                  </button>
+                )}
                 {enLinea.some(({ link }) => link.faltan) && (
                   <span className="suave chico">
                     {enLinea.reduce((n, { link }) => n + link.faltan, 0)} producto(s) no estaban en línea: agrégalos a mano.
@@ -422,6 +429,7 @@ export default function Compras({ sesion, perfil, actualizar, ir, compartir, cam
         </button>
       </div>
       {verLista && lista && <ListaGuardable {...hojaLista()} cerrar={() => setVerLista(false)} />}
+      {verRappi && <PedirEnRappi items={items} perfil={perfil} titulo={receta.titulo} cerrar={() => setVerRappi(false)} />}
     </>
   )
 }
