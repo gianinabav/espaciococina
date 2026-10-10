@@ -53,7 +53,7 @@ export default function Confirmar({ sesion, perfil, onAdaptada }) {
 
   return (
     <>
-      <span className="sobretitulo">Paso 1 · Revisa lo que leímos</span>
+      <span className="sobretitulo">N.º 01 — Revisa lo que leímos</span>
       <h1>{receta.titulo || 'Tu receta'}</h1>
       <p className="suave">
         {{ imagen: 'Leída desde tu foto', link: 'Leída desde el link', refri: 'Receta del recetario TheMealDB' }[sesion.fuente] ?? 'Leída desde el texto'}

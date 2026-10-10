@@ -1,101 +1,150 @@
+import { useEffect, useState } from 'react'
 import { PAISES, enumerar } from '../lib/datos.js'
-import { Aviso, Foto, Mosaico } from './comunes.jsx'
+import { obtener } from '../lib/api.js'
+import { Estrellas, Foto } from './comunes.jsx'
 import { fotoPlato } from '../lib/fotos.js'
 
-export default function Inicio({ perfil, estadoServidor, sesion, historial, refri, ir, abrirSesion }) {
+export default function Inicio({ perfil, estadoServidor, sesion, historial, refri, ir, abrirSesion, abrirFicha }) {
   const pais = PAISES[perfil.pais]
   const cadenas = estadoServidor?.paisesConPrecios?.[perfil.pais] ?? []
+  const [comunidad, setComunidad] = useState(null)
+
+  useEffect(() => {
+    let vigente = true
+    obtener('/api/biblioteca?orden=mejores')
+      .then((d) => vigente && setComunidad(d.recetas.slice(0, 4)))
+      .catch(() => vigente && setComunidad([]))
+    return () => {
+      vigente = false
+    }
+  }, [])
+
+  const indice = [
+    { id: 'nueva', titulo: 'Nueva receta', texto: 'Pega un texto, una foto o un link, en cualquier idioma.' },
+    { id: 'recetario', titulo: 'Recetario', texto: 'Las recetas que la comunidad ya cocinó y calificó.' },
+    { id: 'refri', titulo: 'Mi refri', texto: 'Lo que tienes en casa y qué cocinar con eso.' },
+    { id: 'perfil', titulo: 'Perfil', texto: 'Tu país, tu dieta, tu presupuesto y tus implementos.' },
+  ]
+
   return (
     <>
-      {estadoServidor?.paisesConPrecios && (
-        <Aviso tipo={cadenas.length ? 'ok' : 'demo'} icono="🏷️">
-          <p>
-            {cadenas.length ? (
-              <>
-                En {pais.nombre} comparamos <b>precios reales en línea</b> de {enumerar(cadenas)} y te mostramos su local más cercano.
-              </>
-            ) : (
-              <>
-                En {pais.nombre} todavía no hay supermercados con catálogo en línea gratuito: verás <b>precios estimados</b> y tiendas reales cerca de ti.
-              </>
-            )}
-          </p>
-        </Aviso>
-      )}
+      <div className="dividida">
+        <Foto clave="tomate" como="button" rotulo="Nueva receta" ancho={1400} onClick={() => ir('nueva')} />
+        <Foto clave="huevo" como="button" rotulo="Recetario" ancho={1400} onClick={() => ir('recetario')} />
+      </div>
 
-      <div className="portada">
-        <div className="portada-texto">
-          <div>
-            <span className="sobretitulo">
+      <section className="manifiesto">
+        <h1>Tu asistente de cocina</h1>
+        <div>
+          <p>Prueba recetas nuevas. Guarda las que nunca fallan. La adaptamos a tu país, tu dieta y tu cocina, y te decimos cuánto cuesta y dónde comprarla.</p>
+          {estadoServidor?.paisesConPrecios && (
+            <p className="suave chico">
               {pais.nombre}
-              {perfil.zona ? ` · ${perfil.zona}` : ''}
-            </span>
-            <h1>Cocina lo justo</h1>
-            <p>Pega una receta, súbele una foto o comparte un link. La adaptamos a tu país, tu dieta y tu cocina, y te armamos la compra según tu presupuesto.</p>
-          </div>
-          <div className="fila">
+              {perfil.zona ? `, ${perfil.zona}` : ''} —{' '}
+              {cadenas.length ? `precios reales de hoy en ${enumerar(cadenas)}.` : 'precios estimados y tiendas reales cerca de ti.'}
+            </p>
+          )}
+          <div className="fila" style={{ marginTop: 22 }}>
             <button className="boton grande" onClick={() => ir('nueva')}>
               Cargar una receta
             </button>
             {sesion?.extraida && (
-              <button className="boton secundario" onClick={() => ir(sesion.adaptada ? 'receta' : 'confirmar')}>
+              <button className="boton fantasma" onClick={() => ir(sesion.adaptada ? 'receta' : 'confirmar')}>
                 Seguir con “{recortar(sesion.adaptada?.titulo ?? sesion.extraida.titulo)}”
               </button>
             )}
           </div>
         </div>
-        <Mosaico
-          piezas={[
-            { clave: 'tomate', rotulo: 'Receta', onClick: () => ir('nueva') },
-            { clave: 'cebolla', rotulo: 'Compra', onClick: () => ir(sesion?.adaptada ? 'compras' : 'nueva') },
-            { clave: 'crema', rotulo: 'Sobras', onClick: () => ir(sesion?.adaptada ? 'sobrantes' : 'refri') },
-            { clave: 'hierbas', rotulo: 'Mi refri', onClick: () => ir('refri') },
-          ]}
-        />
-      </div>
-
-      <div className="cifras">
-        <div className="cifra">
-          <b>{historial.length}</b>
-          <span>Recetas</span>
-        </div>
-        <div className="cifra">
-          <b>{refri.length}</b>
-          <span>En mi refri</span>
-        </div>
-        <div className="cifra">
-          <b>
-            {pais.simbolo}
-            {perfil.presupuesto}
-          </b>
-          <span>Presupuesto</span>
-        </div>
-      </div>
-
-      <section>
-        <span className="sobretitulo">Tus recetas</span>
-        {historial.length === 0 ? (
-          <div className="tarjeta vacio">
-            <p>Aquí aparecerán las recetas que adaptes.</p>
-            <button className="boton negro" onClick={() => ir('nueva')}>
-              Empezar con una receta
-            </button>
-          </div>
-        ) : (
-          <div className="grilla-2">
-            {historial.map((s) => (
-              <Foto key={s.id} clave={categoriaPrincipal(s)} como="button" className="tarjeta-receta" onClick={() => abrirSesion(s)} style={{ aspectRatio: '16 / 10', textAlign: 'left' }}>
-                <span style={{ position: 'absolute', left: 16, right: 16, bottom: 14 }}>
-                  <span className="etiqueta negra" style={{ marginBottom: 8 }}>
-                    {new Date(s.creada).toLocaleDateString('es')}
-                  </span>
-                  <h2 style={{ color: '#fff', margin: 0 }}>{s.adaptada.titulo}</h2>
-                </span>
-              </Foto>
-            ))}
-          </div>
-        )}
       </section>
+
+      <div className="contenido">
+        <nav className="indice" aria-label="Índice">
+          {indice.map((x, i) => (
+            <button key={x.id} onClick={() => ir(x.id)}>
+              <span className="num">{String(i + 1).padStart(2, '0')}</span>
+              <span>
+                <b>{x.titulo}</b>
+                <small>{x.texto}</small>
+              </span>
+            </button>
+          ))}
+        </nav>
+
+        <div className="cifras">
+          <div className="cifra">
+            <span>Tus recetas</span>
+            <b>{historial.length}</b>
+          </div>
+          <div className="cifra">
+            <span>En mi refri</span>
+            <b>{refri.length}</b>
+          </div>
+          <div className="cifra">
+            <span>Presupuesto</span>
+            <b>
+              {pais.simbolo}
+              {perfil.presupuesto}
+            </b>
+          </div>
+        </div>
+
+        <section style={{ marginBottom: 56 }}>
+          <div className="seccion-cab">
+            <span className="num">05</span>
+            <b>Tus recetas</b>
+            {historial.length > 0 && <span className="suave">{historial.length}</span>}
+          </div>
+          {historial.length === 0 ? (
+            <div className="vacio">
+              <p>Aquí aparecerán las recetas que adaptes.</p>
+              <button className="boton secundario" onClick={() => ir('nueva')}>
+                Empezar con una receta
+              </button>
+            </div>
+          ) : (
+            <div className="catalogo">
+              {historial.map((s, i) => (
+                <button key={s.id} className="ficha" onClick={() => abrirSesion(s)}>
+                  <Foto clave={categoriaPrincipal(s)} ancho={700} />
+                  <span className="pie-ficha">
+                    <span className="num">N.º {String(historial.length - i).padStart(2, '0')}</span>
+                    <h3>{s.adaptada.titulo}</h3>
+                    <span>
+                      {new Date(s.creada).toLocaleDateString('es', { day: 'numeric', month: 'short' })} · {s.adaptada.porciones} porc.
+                    </span>
+                  </span>
+                </button>
+              ))}
+            </div>
+          )}
+        </section>
+
+        {comunidad?.length > 0 && (
+          <section>
+            <div className="seccion-cab">
+              <span className="num">06</span>
+              <b>Lo mejor del recetario</b>
+              <button className="enlace" onClick={() => ir('recetario')}>
+                Ver todo
+              </button>
+            </div>
+            <div className="catalogo">
+              {comunidad.map((r) => (
+                <button key={r.id} className="ficha" onClick={() => abrirFicha(r.id)}>
+                  <Foto src={r.foto ?? undefined} clave={fotoPlato(r.titulo)} ancho={700} />
+                  <span className="pie-ficha">
+                    <h3>{r.titulo}</h3>
+                    <span className="fila" style={{ gap: 8 }}>
+                      <Estrellas valor={r.calificacion.promedio} tamano="0.8rem" />
+                      {r.calificacion.total ? `${r.calificacion.total} ${r.calificacion.total === 1 ? 'reseña' : 'reseñas'}` : 'Sin reseñas'}
+                    </span>
+                  </span>
+                </button>
+              ))}
+            </div>
+          </section>
+        )}
+      </div>
     </>
   )
 }

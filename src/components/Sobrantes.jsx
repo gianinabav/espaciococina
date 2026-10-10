@@ -43,7 +43,7 @@ export default function Sobrantes({ sesion, perfil, actualizar, agregarARefri, i
 
   return (
     <>
-      <span className="sobretitulo">Paso 4 · Nada se pierde</span>
+      <span className="sobretitulo">N.º 04 — Nada se pierde</span>
       <h1>Lo que te va a sobrar</h1>
       <p className="suave">Los productos se venden en presentaciones (una bolsa de 1 kg, un atado). Esto es lo que quedará después de cocinar.</p>
 

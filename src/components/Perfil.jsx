@@ -52,14 +52,14 @@ export default function Perfil({ perfil, primeraVez, onGuardar }) {
         <div className="portada">
           <div className="portada-texto">
             <div>
-              <span className="sobretitulo">Bienvenida · Paso 1 de 1</span>
+              <span className="sobretitulo">Bienvenida — N.º 00</span>
               <h1>Cuéntanos cómo cocinas</h1>
               <p>Con esto adaptamos cada receta a tu país, tu bolsillo, tu dieta y lo que tienes en la cocina. Lo puedes cambiar cuando quieras.</p>
             </div>
           </div>
           <Mosaico
             piezas={[
-              { clave: 'especias', rotulo: 'Tu país' },
+              { clave: 'tomate', rotulo: 'Tu país' },
               { clave: 'limon', rotulo: 'Tu bolsillo' },
               { clave: 'palta', rotulo: 'Tu dieta' },
               { clave: 'papa', rotulo: 'Tu cocina' },

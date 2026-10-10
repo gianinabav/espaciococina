@@ -40,21 +40,29 @@ export default function Receta({ sesion, perfil, ir, compartir, cambiarPorciones
     <>
       <article className="afiche">
         <div className="afiche-titulo">
-          <span className="sobretitulo">Paso 2 · Tu receta adaptada</span>
-          <h1>{r.titulo}</h1>
-          <SelectorPorciones valor={r.porciones} onCambio={cambiarPorciones} porcion={r.porcion} />
-        </div>
-        <Foto clave={categoriaPrincipal(sesion)} className="afiche-banda" ancho={1400}>
-          <div className="atributos">
-            <span>
-              {r.porciones} {textoPorciones(r.porciones, r.porcion)}
-            </span>
-            {r.peso_porcion_g > 0 && <span>{r.peso_porcion_g} g c/u</span>}
-            <span>{Math.round(n.calorias)} kcal c/u</span>
-            <span>{r.tiempo_total_min} min</span>
+          <div>
+            <span className="sobretitulo">N.º 02 — Tu receta adaptada</span>
+            <h1>{r.titulo}</h1>
+            {r.descripcion && <p className="lema">{r.descripcion}</p>}
           </div>
-          <p className="lema">{r.descripcion}</p>
-        </Foto>
+          <div>
+            <div className="atributos">
+              <span>
+                {r.porciones} {textoPorciones(r.porciones, r.porcion)}
+              </span>
+              {r.peso_porcion_g > 0 && <span>{r.peso_porcion_g} g c/u</span>}
+              <span>{Math.round(n.calorias)} kcal c/u</span>
+              <span>{r.tiempo_total_min} min</span>
+            </div>
+            <div className="porciones-fila">
+              <SelectorPorciones valor={r.porciones} onCambio={cambiarPorciones} porcion={r.porcion} />
+              <button className="enlace" onClick={() => ir('cocinemos')}>
+                Cocinar ahora
+              </button>
+            </div>
+          </div>
+        </div>
+        <Foto clave={categoriaPrincipal(sesion)} className="afiche-banda" ancho={1200} />
       </article>
 
       {sesion.bibliotecaId && (
@@ -104,13 +112,13 @@ export default function Receta({ sesion, perfil, ir, compartir, cambiarPorciones
 
       <div className="grilla-2" style={{ alignItems: 'start' }}>
         <section className="tarjeta">
-          <h2>Ingredientes</h2>
+          <h2>01 — Ingredientes</h2>
           <ul className="lista">
             {r.ingredientes.map((ing, i) => (
               <li key={i} className="item-ing">
                 <Miniatura categoria={ing.categoria} nombre={ing.nombre} />
                 <div>
-                  <div style={{ fontWeight: 700 }}>{ing.nombre}</div>
+                  <div>{ing.nombre}</div>
                   <div className="fila" style={{ gap: 6, marginTop: 4 }}>
                     {ing.sustitucion.aplicada && <span className="etiqueta ladrillo">Cambiado</span>}
                     {ing.opcional && <span className="etiqueta">Opcional</span>}
@@ -126,7 +134,7 @@ export default function Receta({ sesion, perfil, ir, compartir, cambiarPorciones
 
         <div>
           <section className="tarjeta">
-            <h2>Qué cambiamos</h2>
+            <h2>02 — Qué cambiamos</h2>
             {r.cambios.map((c, i) => (
               <div key={i} className="cambio">
                 <span aria-hidden="true">{ICONOS_CAMBIO[c.tipo] ?? '•'}</span>
@@ -142,7 +150,7 @@ export default function Receta({ sesion, perfil, ir, compartir, cambiarPorciones
 
           <section className="tarjeta">
             <div className="fila entre">
-              <h2 style={{ margin: 0 }}>Por {r.porcion?.singular ?? 'porción'}</h2>
+              <h2 style={{ margin: 0 }}>03 — Por {r.porcion?.singular ?? 'porción'}</h2>
               <span className="etiqueta">Aproximado</span>
             </div>
             {r.peso_porcion_g > 0 && (
@@ -175,16 +183,16 @@ export default function Receta({ sesion, perfil, ir, compartir, cambiarPorciones
       </div>
 
       <section className="tarjeta">
-        <h2>Preparación</h2>
+        <h2>04 — Preparación</h2>
         <ol className="pasos-lista" style={{ marginTop: 16 }}>
           {r.pasos.map((p, i) => (
             <li key={i}>
               {p.texto}
               <div className="fila" style={{ gap: 6, marginTop: 6 }}>
-                {p.minutos > 0 && <span className="etiqueta negra">⏱ {p.minutos} min</span>}
+                {p.minutos > 0 && <span className="etiqueta negra">{p.minutos} min</span>}
                 {p.implemento && <span className="etiqueta">{p.implemento}</span>}
               </div>
-              {p.consejo && <div className="motivo">💡 {p.consejo}</div>}
+              {p.consejo && <div className="motivo">Consejo: {p.consejo}</div>}
             </li>
           ))}
         </ol>

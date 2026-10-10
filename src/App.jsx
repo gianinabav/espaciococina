@@ -19,7 +19,7 @@ import FichaReceta from './components/FichaReceta.jsx'
 
 const NAV = [
   { id: 'inicio', nombre: 'Inicio', icono: '⌂' },
-  { id: 'nueva', nombre: 'Receta', icono: '+' },
+  { id: 'nueva', nombre: 'Nueva receta', icono: '+' },
   { id: 'recetario', nombre: 'Recetario', icono: '★' },
   { id: 'refri', nombre: 'Mi refri', icono: '❄' },
   { id: 'perfil', nombre: 'Perfil', icono: '◉' },
@@ -260,6 +260,7 @@ export default function App() {
             setSesion(s)
             ir('receta')
           }}
+          abrirFicha={abrirFicha}
         />
       )
   }
@@ -267,7 +268,7 @@ export default function App() {
   return (
     <Marco pantalla={destino} ir={ir}>
       {estadoServidor?.sinServidor && (
-        <div className="aviso error" role="alert">
+        <div className="aviso error contenido" role="alert">
           <p>No se pudo hablar con el servidor. Ábrelo con <code>npm run dev</code> y recarga la página.</p>
         </div>
       )}
@@ -281,6 +282,11 @@ export default function App() {
 
 function Marco({ pantalla, ir, ocultarNav, children }) {
   const actual = PANTALLAS_FLUJO.includes(pantalla) ? 'nueva' : pantalla === 'ficha' ? 'recetario' : pantalla
+  const boton = (n) => (
+    <button key={n.id} aria-current={actual === n.id ? 'page' : undefined} onClick={() => ir(n.id)}>
+      {n.nombre}
+    </button>
+  )
   return (
     <div className="app">
       <header className="cabecera">
@@ -289,23 +295,58 @@ function Marco({ pantalla, ir, ocultarNav, children }) {
             espaciococina
           </button>
           {!ocultarNav && (
-            <nav className="nav" aria-label="Principal">
-              {NAV.map((n) => (
-                <button key={n.id} aria-current={actual === n.id ? 'page' : undefined} onClick={() => ir(n.id)}>
-                  {n.nombre}
-                </button>
-              ))}
-            </nav>
+            <>
+              <nav className="nav" aria-label="Principal">
+                {NAV.filter((n) => n.id !== 'perfil' && n.id !== 'inicio').map(boton)}
+              </nav>
+              <nav className="nav-derecha" aria-label="Tu cuenta">
+                {NAV.filter((n) => n.id === 'perfil').map(boton)}
+              </nav>
+            </>
           )}
         </div>
       </header>
-      <main className="principal">{children}</main>
-      <footer className="creditos">Precios: tiendas en línea de cada supermercado · Mapas: © OpenStreetMap · Traducción: MyMemory · Recetas: TheMealDB · Fotos: Unsplash · Visitas contadas con GoatCounter, sin cookies</footer>
+      <main className={`principal ${pantalla === 'inicio' ? 'a-sangre' : ''}`}>{children}</main>
+      <footer className="pie">
+        <div className="pie-columnas">
+          <div>
+            <h3>Tu asistente de cocina</h3>
+            <p>Prueba recetas nuevas. Guarda las que nunca fallan.</p>
+          </div>
+          {!ocultarNav && (
+            <div>
+              <h3>Índice</h3>
+              <ul>
+                {NAV.map((n) => (
+                  <li key={n.id}>
+                    <button onClick={() => ir(n.id)}>{n.nombre}</button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+          <div>
+            <h3>Fuentes</h3>
+            <ul className="creditos">
+              <li>Precios: tiendas en línea de cada supermercado</li>
+              <li>Mapas: © OpenStreetMap</li>
+              <li>Traducción: MyMemory</li>
+              <li>Recetas: TheMealDB · Fotos: Unsplash</li>
+            </ul>
+          </div>
+          <div>
+            <h3>Privacidad</h3>
+            <p className="creditos">Sin cuentas ni cookies. Tu perfil vive en tu navegador. Visitas contadas con GoatCounter.</p>
+          </div>
+        </div>
+        <div className="pie-marca" aria-hidden="true">
+          <p className="display">espaciococina</p>
+        </div>
+      </footer>
       {!ocultarNav && (
         <nav className="nav-movil" aria-label="Principal">
           {NAV.map((n) => (
             <button key={n.id} aria-current={actual === n.id ? 'page' : undefined} onClick={() => ir(n.id)}>
-              <span aria-hidden="true">{n.icono}</span>
               {n.nombre}
             </button>
           ))}

@@ -2,10 +2,8 @@ import { useEffect, useMemo, useState } from 'react'
 import { PAISES, enumerar } from '../lib/datos.js'
 import { enviar } from '../lib/api.js'
 import { armarListas, itemsAComprar, formatoDinero, formatoCantidad, claveCatalogo } from '../lib/compras.js'
-import { Aviso, Foto, Miniatura, SelectorPorciones } from './comunes.jsx'
+import { Aviso, Miniatura, SelectorPorciones } from './comunes.jsx'
 
-const FOTO_LUGAR = { mercado: 'verdura', supermercado: 'limon', tienda: 'panaderia' }
-const FOTOS_CADENA = ['limon', 'especias', 'hierbas', 'tomate']
 
 export default function Compras({ sesion, perfil, actualizar, ir, compartir, cambiarPorciones, tiendas, cargarTiendas, estadoServidor }) {
   const receta = sesion.adaptada
@@ -58,7 +56,7 @@ export default function Compras({ sesion, perfil, actualizar, ir, compartir, cam
 
   return (
     <>
-      <span className="sobretitulo">Paso 3 · Tu compra</span>
+      <span className="sobretitulo">N.º 03 — Tu compra</span>
       <h1>Gasta lo justo</h1>
       <div className="fila" style={{ marginBottom: 16 }}>
         <span className="suave chico">Compra para</span>
@@ -87,7 +85,7 @@ export default function Compras({ sesion, perfil, actualizar, ir, compartir, cam
       )}
 
       <section className="tarjeta">
-        <h2>¿Qué ya tienes?</h2>
+        <h2>01 — ¿Qué ya tienes?</h2>
         <p className="suave chico">Marcamos lo que suele haber en casa y lo que tienes en Mi refri. Lo que marques no entra en la compra.</p>
         <ul className="lista interruptores">
           {receta.ingredientes.map((ing, i) =>
@@ -201,100 +199,87 @@ export default function Compras({ sesion, perfil, actualizar, ir, compartir, cam
           const listos = c.items.filter((it) => comprados[`${c.lugar.id}:${it.indice}`]).length
           const s = c.lugar.sucursal
           return (
-            <section key={c.lugar.id} className="tarjeta carrito">
-              <Foto clave={c.lugar.enLinea ? FOTOS_CADENA[n % FOTOS_CADENA.length] : FOTO_LUGAR[c.lugar.id]} className="carrito-cab" ancho={1000}>
-                <div className="fila" style={{ gap: 6, marginBottom: 6 }}>
-                  <span className="etiqueta negra">
-                    {listos}/{c.items.length} en el carrito
+            <section key={c.lugar.id} className="carrito">
+              <div className="carrito-cab">
+                <div>
+                  <span className="sobretitulo" style={{ margin: 0 }}>
+                    Tienda {String(n + 1).padStart(2, '0')} · {listos}/{c.items.length} en el carrito{s ? ` · a ${s.distancia_km} km` : ''}
                   </span>
-                  {s && <span className="etiqueta negra">a {s.distancia_km} km</span>}
-                </div>
-                <h2>{c.lugar.nombre}</h2>
-              </Foto>
-              <div className="carrito-cuerpo">
-                <div className="sucursal">
-                  {s ? (
-                    <p>
-                      📍 <b>{s.nombre}</b>
-                      {s.direccion ? ` · ${s.direccion}` : ''} · a {s.distancia_km} km de {datosTiendas?.centro?.nombre ?? 'ti'}
-                      {s.horario && <span className="suave chico"> · {s.horario}</span>}
-                    </p>
-                  ) : (
-                    <p className="suave chico">{tiendas?.estado === 'cargando' ? 'Buscando el local más cercano…' : 'No encontramos este local en el mapa cerca de tu zona.'}</p>
-                  )}
-                  <div className="fila" style={{ gap: 6 }}>
-                    <a className="boton negro chico-boton" href={s ? s.mapa : c.lugar.buscarEnMapa} target="_blank" rel="noreferrer">
-                      {s ? 'Cómo llegar' : 'Ver locales cercanos'}
-                    </a>
-                    {c.lugar.web && (
-                      <a className="boton secundario chico-boton" href={c.lugar.web} target="_blank" rel="noreferrer">
-                        Comprar en línea
-                      </a>
+                  <h2>{c.lugar.nombre}</h2>
+                  <div className="sucursal">
+                    {s ? (
+                      <p>
+                        {s.nombre}
+                        {s.direccion ? `, ${s.direccion}` : ''} — a {s.distancia_km} km de {datosTiendas?.centro?.nombre ?? 'ti'}
+                        {s.horario ? ` · ${s.horario}` : ''}
+                      </p>
+                    ) : (
+                      <p>{tiendas?.estado === 'cargando' ? 'Buscando el local más cercano…' : 'No encontramos este local en el mapa cerca de tu zona.'}</p>
                     )}
                   </div>
                 </div>
-                <ul className="lista">
-                  {c.items.map((it) => {
-                    const claveItem = `${c.lugar.id}:${it.indice}`
-                    const hecho = Boolean(comprados[claveItem])
-                    return (
-                      <li key={claveItem} className={`item-compra producto ${hecho ? 'hecho' : ''}`}>
-                        <input type="checkbox" className="check" checked={hecho} onChange={() => actualizar({ comprados: { ...comprados, [claveItem]: !hecho } })} aria-label={`Comprado: ${it.nombre}`} />
-                        {it.producto?.imagen ? <img className="miniatura" src={it.producto.imagen} alt="" loading="lazy" /> : <Miniatura categoria={it.categoria} nombre={it.nombre} />}
-                        <div>
-                          <div className="nombre" style={{ fontWeight: 700 }}>
-                            {it.nombre}
-                            {it.esAlternativa && <span className="etiqueta verde" style={{ marginLeft: 6 }}>Ahorro</span>}
-                          </div>
-                          {it.producto ? (
-                            <a className="producto-tienda" href={it.producto.url} target="_blank" rel="noreferrer">
-                              {it.producto.nombre}
-                              {it.producto.marca && !it.producto.nombre.toLowerCase().includes(it.producto.marca.toLowerCase()) ? ` · ${it.producto.marca}` : ''}
-                            </a>
-                          ) : (
-                            <span className="suave chico">No apareció en línea · precio estimado</span>
-                          )}
-                          <div className="suave chico">
-                            {it.paquetes > 1 ? `${it.paquetes} × ` : ''}
-                            {it.presentacion.descripcion} · necesitas {it.cantidad ? formatoCantidad(it.cantidad, it.unidad) : 'un poco'}
-                          </div>
-                        </div>
-                        <div className="precio">
-                          {formatoDinero(it.subtotal, perfil)}
-                          {it.paquetes > 1 && <div className="suave chico">{formatoDinero(it.precio.monto, perfil)} c/u</div>}
-                          {lista.id === 'barata' && it.ahorro > 0 && (
-                            <div>
-                              <span className="etiqueta verde">Ahorras {formatoDinero(it.ahorro, perfil)}</span>
-                            </div>
-                          )}
-                          {it.precio.oferta && (
-                            <div>
-                              <span className="etiqueta ladrillo">Oferta</span>
-                            </div>
-                          )}
-                          {it.precio.estado === 'estimado' && (
-                            <div>
-                              <span className="etiqueta demo">Estimado</span>
-                            </div>
-                          )}
-                        </div>
-                      </li>
-                    )
-                  })}
-                </ul>
-                <div className="fila entre" style={{ borderTop: '2px solid var(--tinta)', paddingTop: 12 }}>
-                  <span className="rotulo">Subtotal</span>
-                  <b>{formatoDinero(c.subtotal, perfil)}</b>
+                <div className="acciones">
+                  <a className="boton chico-boton" href={s ? s.mapa : c.lugar.buscarEnMapa} target="_blank" rel="noreferrer">
+                    {s ? 'Cómo llegar' : 'Ver locales cercanos'}
+                  </a>
+                  {c.lugar.web && (
+                    <a className="boton secundario chico-boton" href={c.lugar.web} target="_blank" rel="noreferrer">
+                      Comprar en línea
+                    </a>
+                  )}
                 </div>
+              </div>
+              <ul className="productos">
+                {c.items.map((it) => {
+                  const claveItem = `${c.lugar.id}:${it.indice}`
+                  const hecho = Boolean(comprados[claveItem])
+                  return (
+                    <li key={claveItem} className={`producto ${hecho ? 'hecho' : ''}`}>
+                      <div className="producto-imagen">
+                        {it.producto?.imagen ? <img src={it.producto.imagen} alt="" loading="lazy" /> : <Miniatura categoria={it.categoria} nombre={it.nombre} />}
+                        <input type="checkbox" className="check" checked={hecho} onChange={() => actualizar({ comprados: { ...comprados, [claveItem]: !hecho } })} aria-label={`Comprado: ${it.nombre}`} />
+                        {it.precio.oferta ? (
+                          <span className="etiqueta ladrillo">Oferta</span>
+                        ) : it.esAlternativa ? (
+                          <span className="etiqueta verde">Ahorro</span>
+                        ) : it.precio.estado === 'estimado' ? (
+                          <span className="etiqueta demo">Estimado</span>
+                        ) : null}
+                      </div>
+                      <h3>{it.nombre}</h3>
+                      {it.producto ? (
+                        <a className="producto-tienda" href={it.producto.url} target="_blank" rel="noreferrer">
+                          {it.producto.nombre}
+                          {it.producto.marca && !it.producto.nombre.toLowerCase().includes(it.producto.marca.toLowerCase()) ? ` · ${it.producto.marca}` : ''}
+                        </a>
+                      ) : (
+                        <span className="suave">No apareció en línea · precio estimado</span>
+                      )}
+                      <span className="suave">
+                        {it.paquetes > 1 ? `${it.paquetes} × ` : ''}
+                        {it.presentacion.descripcion} · necesitas {it.cantidad ? formatoCantidad(it.cantidad, it.unidad) : 'un poco'}
+                      </span>
+                      {lista.id === 'barata' && it.ahorro > 0 && <span style={{ color: 'var(--ok)' }}>Ahorras {formatoDinero(it.ahorro, perfil)}</span>}
+                      <div className="precio">
+                        <span className="suave">{it.paquetes > 1 ? `${formatoDinero(it.precio.monto, perfil)} c/u` : ''}</span>
+                        <b>{formatoDinero(it.subtotal, perfil)}</b>
+                      </div>
+                    </li>
+                  )
+                })}
+              </ul>
+              <div className="subtotal">
+                <span>Subtotal {c.lugar.nombre}</span>
+                <b>{formatoDinero(c.subtotal, perfil)}</b>
               </div>
             </section>
           )
         })}
 
       {!buscando && lista && items.length > 0 && (
-        <div className="tarjeta fila entre">
-          <h2 style={{ margin: 0 }}>Total</h2>
-          <h2 style={{ margin: 0, color: 'var(--ladrillo)' }}>{formatoDinero(lista.total, perfil)}</h2>
+        <div className="gran-total">
+          <h2>Total</h2>
+          <p className="display">{formatoDinero(lista.total, perfil)}</p>
         </div>
       )}
 

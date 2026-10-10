@@ -68,7 +68,7 @@ export default function Recetario({ abrirFicha, ir }) {
             {datos.recetas.length} {datos.recetas.length === 1 ? 'receta' : 'recetas'}
             {busqueda || orden === 'mias' ? ` de ${datos.total}` : ''}
           </p>
-          <div className="grilla-2" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(min(240px, 100%), 1fr))' }}>
+          <div className="catalogo">
             {datos.recetas.map((r) => (
               <button key={r.id} className="tarjeta-recetario" onClick={() => abrirFicha(r.id)}>
                 <Foto src={r.foto ?? undefined} clave={fotoPlato(r.titulo)} ancho={700}>
