@@ -1,0 +1,13 @@
+# Configuración para publicar espaciococina en Render (plan gratuito).
+# En Render: New → Blueprint → elegir este repositorio, y Render usa estos datos.
+services:
+  - type: web
+    name: espaciococina
+    runtime: node
+    plan: free
+    buildCommand: npm ci --include=dev && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/estado
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
