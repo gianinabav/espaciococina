@@ -100,22 +100,17 @@ export async function textoDesdeLink(direccion) {
 
 async function recetaDePagina(url) {
   let html
-  let aviso
   try {
     ;({ html } = await descargar(url))
   } catch (error) {
     if (error.codigo !== 'bloqueada') throw error
-    // Plan B: la copia pública que guarda el Internet Archive (web.archive.org).
-    try {
-      const copia = await descargar(new URL(`https://web.archive.org/web/2id_/${url.href}`))
-      html = copia.html
-      const fecha = copia.urlFinal.match(/\/web\/(\d{4})(\d{2})(\d{2})/)
-      aviso = `${url.hostname.replace(/^www\./, '')} bloquea la lectura automática, así que usamos la copia pública guardada en archive.org${fecha ? ` el ${fecha[3]}/${fecha[2]}/${fecha[1]}` : ''}. Revisa que la receta sea la misma.`
-    } catch {
-      throw new ErrorApp('bloqueada', `${url.hostname.replace(/^www\./, '')} bloquea la lectura automática (protección anti-robots) y no hay una copia guardada en archive.org. Copia la receta desde tu navegador y pégala en "Texto".`, 422)
-    }
+    return recetaDeArchivo(url)
   }
+  return recetaDeHtml(html)
+}
 
+// Lee la receta de una página ya descargada. Sin una lista de ingredientes, falla con "link_sin_receta".
+function recetaDeHtml(html, aviso) {
   // La mayoría de los sitios de recetas publican la receta en formato schema.org.
   const recetaLD = buscarRecetaJsonLd(html)
   if (recetaLD) {
@@ -129,6 +124,40 @@ async function recetaDePagina(url) {
     throw new ErrorApp('link_sin_receta', 'No encontramos una lista de ingredientes en esa página (puede que la cargue con JavaScript o que esté en un video). Copia la receta y pégala en "Texto".', 422)
   }
   return { receta, fuente: 'html', aviso, recortado: texto.length > MAX_CARACTERES }
+}
+
+// Plan B: las copias públicas que guarda el Internet Archive (web.archive.org).
+// Algunos sitios reemplazan sus copias recientes por un aviso ("Payment Required"),
+// así que se piden al índice las últimas copias que se guardaron bien y se prueban
+// de la más nueva a la más vieja. Si el índice no responde, se prueba la más reciente.
+const COPIAS_A_PROBAR = 3
+
+async function recetaDeArchivo(url) {
+  const sitio = url.hostname.replace(/^www\./, '')
+  const fechas = []
+  try {
+    const cdx = new URL('https://web.archive.org/cdx/search/cdx')
+    cdx.search = new URLSearchParams({ url: url.href, filter: 'statuscode:200', output: 'json', limit: String(-COPIAS_A_PROBAR) })
+    const filas = await fetch(cdx, { signal: AbortSignal.timeout(15000) }).then((r) => (r.ok ? r.json() : []))
+    fechas.push(...filas.slice(1).map((f) => f[1]).reverse())
+  } catch {
+    // Sin índice de copias: solo se prueba la más reciente.
+  }
+  if (!fechas.length) fechas.push('2')
+
+  for (const fecha of fechas) {
+    try {
+      const copia = await descargar(new URL(`https://web.archive.org/web/${fecha}id_/${url.href}`))
+      const dia = copia.urlFinal.match(/\/web\/(\d{4})(\d{2})(\d{2})/)
+      const aviso = `${sitio} bloquea la lectura automática, así que usamos la copia pública guardada en archive.org${dia ? ` el ${dia[3]}/${dia[2]}/${dia[1]}` : ''}. Revisa que la receta sea la misma.`
+      return recetaDeHtml(copia.html, aviso)
+    } catch (error) {
+      // Si archive.org pide esperar (demasiadas consultas), insistir solo empeora: se corta aquí.
+      if (error.codigo === 'bloqueada') break
+      // Esta copia no sirve (vacía o sin receta): se prueba la siguiente.
+    }
+  }
+  throw new ErrorApp('bloqueada', `${sitio} bloquea la lectura automática (protección anti-robots) y tampoco pudimos usar su copia en archive.org. Copia la receta desde tu navegador y pégala en "Texto".`, 422)
 }
 
 // ---------- YouTube ----------
