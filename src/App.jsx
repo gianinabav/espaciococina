@@ -3,6 +3,7 @@ import { obtener, enviar } from './lib/api.js'
 import { useGuardado, nuevoId, estaEnRefri } from './lib/almacen.js'
 import { Cargando, Flujo } from './components/comunes.jsx'
 import { escalarReceta } from './lib/porciones.js'
+import { traducirEnNavegador } from './lib/traducir.js'
 import Perfil from './components/Perfil.jsx'
 import Inicio from './components/Inicio.jsx'
 import CargarReceta from './components/CargarReceta.jsx'
@@ -147,7 +148,15 @@ export default function App() {
   const cocinarDesdeRefri = async (r) => {
     let pasos = r.pasos ?? r.pasosOriginales ?? []
     setPreparando(true)
-    if (r.pasosOriginales && perfil.idioma !== 'en') pasos = (await enviar('/api/traducir-pasos', { pasos: r.pasosOriginales, usuario: perfil }).catch(() => ({ pasos }))).pasos
+    if (r.pasosOriginales && perfil.idioma !== 'en') {
+      const respuesta = await enviar('/api/traducir-pasos', { pasos: r.pasosOriginales, usuario: perfil }).catch(() => null)
+      pasos = respuesta?.pasos ?? r.pasosOriginales
+      // Sin cupo en el servidor: traduce el navegador.
+      if (respuesta?.pendiente?.textos?.length) {
+        const mapa = await traducirEnNavegador(respuesta.pendiente.textos, 'en', perfil.idioma)
+        pasos = r.pasosOriginales.map((p, n) => mapa[p] ?? pasos[n])
+      }
+    }
     setPreparando(false)
     nuevaSesion({
       fuente: 'refri',

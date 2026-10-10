@@ -58,17 +58,23 @@ app.post(
   '/api/extraer',
   limiteConsultas,
   manejar(async (req) => {
-    const { tipo, texto, url, usuario } = req.body ?? {}
+    const { tipo, texto, url, usuario, traducciones } = req.body ?? {}
+    // Si quedó texto sin traducir, se devuelve la receta leída para que el navegador
+    // traduzca lo pendiente y la mande de vuelta (tipo "leida") sin volver a descargarla.
+    const responder = async (leida, extra = {}) => {
+      const datos = await prepararExtraccion(leida, usuario, traducciones && typeof traducciones === 'object' ? traducciones : {})
+      return { datos, ...extra, ...(datos.pendiente && { leida }) }
+    }
     if (tipo === 'texto') {
       if (!texto?.trim()) throw new ErrorApp('vacio', 'Pega el texto de la receta.', 400)
-      return { datos: await prepararExtraccion(recetaDesdeTexto(texto), usuario) }
+      return responder(recetaDesdeTexto(texto))
     }
     if (tipo === 'link') {
       const pagina = await textoDesdeLink(url)
-      const datos = await prepararExtraccion(pagina.receta, usuario)
       const avisos = [pagina.aviso, pagina.recortado && 'La página era muy larga: se leyó solo la primera parte.'].filter(Boolean)
-      return { datos, aviso: avisos.join(' ') || undefined }
+      return responder(pagina.receta, { aviso: avisos.join(' ') || undefined })
     }
+    if (tipo === 'leida') return responder(limpiarLeida(req.body.leida))
     throw new ErrorApp('tipo', 'Elige texto, foto o link.', 400)
   }),
 )
@@ -121,7 +127,7 @@ app.post(
 app.post(
   '/api/traducir-pasos',
   limiteConsultas,
-  manejar(async (req) => traducirPasos(req.body?.pasos ?? [], req.body?.usuario?.idioma ?? 'es')),
+  manejar(async (req) => traducirPasos(req.body?.pasos ?? [], req.body?.usuario?.idioma ?? 'es', req.body?.traducciones ?? {})),
 )
 
 // ---------- Recetario compartido ----------
@@ -136,6 +142,27 @@ app.post('/api/biblioteca/:id/fotos', limiteFotos, manejar(async (req) => biblio
 app.delete('/api/biblioteca/:id/fotos/:fotoId', manejar(async (req) => biblioteca.borrarFoto(req.params.id, req.params.fotoId, biblioteca.huella(req))))
 
 app.use('/api', (_req, res) => res.status(404).json({ error: 'No existe esa ruta.' }))
+
+// Receta ya leída que vuelve desde el navegador: se acota todo por seguridad.
+function limpiarLeida(l = {}) {
+  const texto = (t, max) => String(t ?? '').slice(0, max)
+  return {
+    titulo: texto(l.titulo, 200),
+    porciones: Math.max(1, Math.min(200, Number(l.porciones) || 4)),
+    rinde: texto(l.rinde, 100),
+    tiempo_total_min: Math.max(0, Math.min(2880, Number(l.tiempo_total_min) || 0)),
+    idioma: ['es', 'en', 'pt', 'fr'].includes(l.idioma) ? l.idioma : 'en',
+    ingredientes: (Array.isArray(l.ingredientes) ? l.ingredientes : []).slice(0, 80).map((i) => ({
+      original: texto(i.original, 200),
+      nombre: texto(i.nombre, 120),
+      cantidad: Math.max(0, Math.min(100000, Number(i.cantidad) || 0)),
+      unidad: texto(i.unidad, 40),
+      nota: texto(i.nota, 200),
+      opcional: Boolean(i.opcional),
+    })),
+    pasos: (Array.isArray(l.pasos) ? l.pasos : []).slice(0, 60).map((p) => texto(p, 2000)),
+  }
+}
 
 function manejar(fn) {
   return async (req, res) => {

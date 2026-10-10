@@ -47,7 +47,7 @@ export function recetaDesdeJsonLd(nodo) {
 }
 
 // Convierte la receta leída al formato que confirma la persona, en su idioma.
-export async function prepararExtraccion(leida, usuario = {}) {
+export async function prepararExtraccion(leida, usuario = {}, ayudaTraduccion = {}) {
   const idioma = usuario.idioma ?? 'es'
   const pais = usuario.pais ?? 'PE'
   if (leida.ingredientes.length < 2) {
@@ -69,7 +69,7 @@ export async function prepararExtraccion(leida, usuario = {}) {
   for (const i of ingredientes) if (i.nota && otroIdioma && idioma === 'es') i.notaTraducida = notaLocal(i.nota) ?? undefined
   const notas = ingredientes.filter((i) => i.nota && otroIdioma && !i.notaTraducida)
   const porTraducir = [leida.titulo, ...leida.pasos, ...sinGlosario.map((i) => i.nombre), ...notas.map((i) => i.nota)]
-  const { textos, traducido } = otroIdioma ? await traducir(porTraducir, leida.idioma, idioma) : { textos: porTraducir, traducido: true }
+  const { textos, traducido, faltantes = [] } = otroIdioma ? await traducir(porTraducir, leida.idioma, idioma, ayudaTraduccion) : { textos: porTraducir, traducido: true }
   let k = 0
   // Los nombres de los ingredientes reconocidos se cambian por los del país también en el título y los pasos.
   const renombres = ingredientes.filter((i) => i.ing).map((i) => ({ de: [i.nombre, ...i.ing.es, ...i.ing.en], a: nombreLocal(i.ing, pais, idioma) }))
@@ -97,6 +97,8 @@ export async function prepararExtraccion(leida, usuario = {}) {
     }))),
     pasos,
     notas: otroIdioma && !traducido ? 'Parte del texto no se pudo traducir (el traductor gratuito tiene un límite diario).' : '',
+    // Lo que el servidor no pudo traducir: el navegador del visitante lo intenta con su propio cupo.
+    pendiente: otroIdioma && !traducido ? { de: leida.idioma, a: idioma, textos: faltantes } : null,
   }
 }
 

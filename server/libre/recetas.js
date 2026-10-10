@@ -150,7 +150,7 @@ export async function recetasParaRefri(items, usuario = {}) {
 }
 
 // Traduce los pasos de una receta de TheMealDB al elegirla.
-export async function traducirPasos(pasos, idioma) {
-  const { textos, traducido } = await traducir(pasos, 'en', idioma)
-  return { pasos: textos, traducido }
+export async function traducirPasos(pasos, idioma, ayuda = {}) {
+  const { textos, traducido, faltantes } = await traducir(pasos.slice(0, 60).map((p) => String(p).slice(0, 2000)), 'en', idioma, ayuda)
+  return { pasos: textos, traducido, pendiente: traducido ? null : { de: 'en', a: idioma, textos: faltantes } }
 }

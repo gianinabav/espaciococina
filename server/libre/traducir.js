@@ -5,7 +5,8 @@ import { cache } from './cache.js'
 
 const guardadas = cache('traducciones')
 const IDIOMAS = { es: 'es', en: 'en', pt: 'pt-BR', fr: 'fr' }
-let agotado = false
+// TRADUCCION_EN_SERVIDOR=off: el servidor no traduce y deja todo al navegador (sirve para probar).
+let agotado = process.env.TRADUCCION_EN_SERVIDOR === 'off'
 
 async function traducirTrozo(texto, de, a) {
   const clave = `${de}|${a}|${texto}`
@@ -30,27 +31,35 @@ async function traducirTrozo(texto, de, a) {
 
 const decodificar = (t) => t.replace(/&#39;|&apos;/g, "'").replace(/&quot;/g, '"').replace(/&amp;/g, '&')
 
-// Traduce una lista de textos. Devuelve { textos, traducido } (traducido=false si algo falló).
-export async function traducir(textos, de, a) {
-  if (!textos.length || de === a) return { textos, traducido: true }
-  let todoBien = true
+// Traduce una lista de textos. Devuelve { textos, traducido, faltantes }.
+// "ayuda" son traducciones que ya hizo el navegador del visitante (texto original → traducido):
+// se usan primero, y quedan guardadas para la próxima vez.
+export async function traducir(textos, de, a, ayuda = {}) {
+  if (!textos.length || de === a) return { textos, traducido: true, faltantes: [] }
+  const faltantes = []
   const resultado = []
   // De a pocos para no saturar el servicio.
   for (let i = 0; i < textos.length; i += 4) {
     const grupo = await Promise.all(
       textos.slice(i, i + 4).map(async (t) => {
         if (!t?.trim()) return t
+        if (typeof ayuda[t] === 'string' && ayuda[t].trim()) {
+          guardadas.escribir(`${de}|${a}|${t.trim()}`, ayuda[t].trim().slice(0, 4000))
+          return ayuda[t].trim()
+        }
         const partes = t.length > 450 ? t.match(/[^.!?]+[.!?]*\s*/g) ?? [t] : [t]
         const traducidas = []
+        let completo = true
         for (const p of partes) {
           const tr = await traducirTrozo(p.trim(), de, a)
-          if (!tr) todoBien = false
+          if (!tr) completo = false
           traducidas.push(tr ?? p.trim())
         }
+        if (!completo) faltantes.push(t)
         return traducidas.join(' ')
       }),
     )
     resultado.push(...grupo)
   }
-  return { textos: resultado, traducido: todoBien }
+  return { textos: resultado, traducido: faltantes.length === 0, faltantes }
 }

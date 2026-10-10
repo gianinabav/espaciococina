@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { enviar, obtener, prepararImagen } from '../lib/api.js'
+import { traducirEnNavegador } from '../lib/traducir.js'
 import { Aviso, Cargando } from './comunes.jsx'
 
 const PESTANAS = [
@@ -62,7 +63,18 @@ export default function CargarReceta({ perfil, onLeida }) {
         cuerpo = tipo === 'texto' ? { tipo, texto } : { tipo, url: url.trim() }
       }
       setCargando({ titulo: 'Leyendo tu receta', detalle: tipo === 'link' ? 'Abriendo la página y buscando los ingredientes…' : 'Separando ingredientes, cantidades y pasos…' })
-      const respuesta = await enviar('/api/extraer', { ...cuerpo, usuario: perfil })
+      let respuesta = await enviar('/api/extraer', { ...cuerpo, usuario: perfil })
+      // Si el servidor no pudo traducir todo, lo traduce este navegador y se vuelve a armar la receta.
+      const pendiente = respuesta.datos.pendiente
+      if (pendiente?.textos?.length && respuesta.leida) {
+        setCargando({ titulo: 'Traduciendo la receta', detalle: 'Un momento: la estamos pasando a tu idioma…' })
+        const traducciones = await traducirEnNavegador(pendiente.textos, pendiente.de, pendiente.a)
+        if (Object.keys(traducciones).length) {
+          const aviso = respuesta.aviso
+          respuesta = await enviar('/api/extraer', { tipo: 'leida', leida: respuesta.leida, traducciones, usuario: perfil })
+          respuesta.aviso = aviso
+        }
+      }
       if (!respuesta.datos.es_receta) {
         setError(respuesta.datos.motivo_no_receta || 'Eso no parece una receta.')
         if (tipo === 'imagen') {
