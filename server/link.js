@@ -5,6 +5,7 @@
 import dns from 'node:dns/promises'
 import net from 'node:net'
 import { ErrorApp } from './errores.js'
+import { cache } from './libre/cache.js'
 import { leerRecetaJsonLd, leerRecetaTexto, limpiarTitulo } from './libre/receta-texto.js'
 
 const MAX_CARACTERES = 60000
@@ -83,7 +84,7 @@ async function descargar(url) {
   const html = await respuesta.text().catch(() => '')
   const desafio = /just a moment|cf-chl|challenge-platform|captcha|attention required/i.test(html.slice(0, 20000))
   if ([401, 403, 429, 503].includes(respuesta.status) || (desafio && html.length < 50000)) {
-    throw new ErrorApp('bloqueada', 'Esa página bloquea la lectura automática.', 422)
+    throw Object.assign(new ErrorApp('bloqueada', 'Esa página bloquea la lectura automática.', 422), { saturada: respuesta.status === 429 })
   }
   if (!respuesta.ok) {
     throw new ErrorApp('link_no_responde', `La página respondió con un error (${respuesta.status}). Prueba pegando el texto de la receta.`, 502)
@@ -130,9 +131,15 @@ function recetaDeHtml(html, aviso) {
 // Algunos sitios reemplazan sus copias recientes por un aviso ("Payment Required"),
 // así que se piden al índice las últimas copias que se guardaron bien y se prueban
 // de la más nueva a la más vieja. Si el índice no responde, se prueba la más reciente.
+// Lo leído se guarda 30 días: archive.org limita las consultas seguidas, y una copia vieja no cambia.
 const COPIAS_A_PROBAR = 3
+const leidasDelArchivo = cache('archivo', 24 * 30)
+const esperar = (ms) => new Promise((r) => setTimeout(r, ms))
 
 async function recetaDeArchivo(url) {
+  const guardada = leidasDelArchivo.leer(url.href)
+  if (guardada) return guardada
+
   const sitio = url.hostname.replace(/^www\./, '')
   const fechas = []
   try {
@@ -145,17 +152,25 @@ async function recetaDeArchivo(url) {
   }
   if (!fechas.length) fechas.push('2')
 
+  let saturado = false
   for (const fecha of fechas) {
-    try {
-      const copia = await descargar(new URL(`https://web.archive.org/web/${fecha}id_/${url.href}`))
-      const dia = copia.urlFinal.match(/\/web\/(\d{4})(\d{2})(\d{2})/)
-      const aviso = `${sitio} bloquea la lectura automática, así que usamos la copia pública guardada en archive.org${dia ? ` el ${dia[3]}/${dia[2]}/${dia[1]}` : ''}. Revisa que la receta sea la misma.`
-      return recetaDeHtml(copia.html, aviso)
-    } catch (error) {
-      // Si archive.org pide esperar (demasiadas consultas), insistir solo empeora: se corta aquí.
-      if (error.codigo === 'bloqueada') break
-      // Esta copia no sirve (vacía o sin receta): se prueba la siguiente.
+    // Si archive.org pide esperar, se espera un poco y se reintenta una sola vez.
+    for (let intento = 0; intento < 2; intento++) {
+      try {
+        const copia = await descargar(new URL(`https://web.archive.org/web/${fecha}id_/${url.href}`))
+        const dia = copia.urlFinal.match(/\/web\/(\d{4})(\d{2})(\d{2})/)
+        const aviso = `${sitio} bloquea la lectura automática, así que usamos la copia pública guardada en archive.org${dia ? ` el ${dia[3]}/${dia[2]}/${dia[1]}` : ''}. Revisa que la receta sea la misma.`
+        return leidasDelArchivo.escribir(url.href, recetaDeHtml(copia.html, aviso))
+      } catch (error) {
+        saturado = Boolean(error.saturada)
+        if (!saturado) break // Esta copia no sirve (vacía o sin receta): se prueba la siguiente.
+        if (intento === 0) await esperar(5000)
+      }
     }
+    if (saturado) break // Insistir con otras copias solo alarga el bloqueo.
+  }
+  if (saturado) {
+    throw new ErrorApp('bloqueada', `${sitio} bloquea la lectura automática y archive.org, donde buscamos su copia, está recibiendo demasiadas consultas en este momento. Prueba otra vez en unos minutos o pega el texto de la receta en "Texto".`, 503)
   }
   throw new ErrorApp('bloqueada', `${sitio} bloquea la lectura automática (protección anti-robots) y tampoco pudimos usar su copia en archive.org. Copia la receta desde tu navegador y pégala en "Texto".`, 422)
 }
