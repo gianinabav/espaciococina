@@ -23,9 +23,9 @@ export const GLOSARIO = [
   E('pollo', 'pollo', 'chicken|whole chicken|chicken pieces', 'pollo|pollo entero|presas de pollo', 'frango', { BR: 'frango' }, { gu: 1600, k: [215, 18, 0, 15], f: 'R', dias: 2, sub: { vegana: 'garbanzo', vegetariana: 'garbanzo' } }),
   E('pavo', 'pollo', 'turkey|ground turkey', 'pavo|carne de pavo', 'peru', {}, { k: [189, 29, 0, 7], f: 'R', dias: 2 }),
   E('carne_molida', 'carne_roja', 'ground beef|minced beef|beef mince|hamburger meat', 'carne molida|carne picada|molida de res', 'carne moida', { PE: 'carne molida', MX: 'carne molida de res', CO: 'carne molida', AR: 'carne picada', CL: 'carne molida', ES: 'carne picada', BR: 'carne moída' }, { k: [254, 17, 0, 20], f: 'R', dias: 2, sub: { vegana: 'lenteja', vegetariana: 'lenteja' } }),
-  E('res_bistec', 'carne_roja', 'beef steak|steak|sirloin|flank steak|skirt steak|beef tenderloin|ribeye', 'bistec|filete de res|lomo de res|bife|churrasco|entraña|lomo fino|bisteck', 'bife|contrafile|fraldinha', { PE: 'bistec de res', MX: 'bistec de res', CO: 'carne de res para asar', AR: 'bife de chorizo', CL: 'filete de vacuno', ES: 'filete de ternera', BR: 'bife' }, { gu: 200, k: [250, 26, 0, 15], f: 'R', dias: 3, sub: { vegana: 'champinon', vegetariana: 'champinon' } }),
-  E('res', 'carne_roja', 'beef|stew beef|beef chuck|chuck roast|brisket', 'carne de res|carne para guiso|asado|res|carne de vacuno|ternera', 'carne bovina|acem|patinho', { PE: 'carne de res para guiso', MX: 'carne de res para guisar', AR: 'carne para guiso', CL: 'carne de vacuno', ES: 'ternera para guisar', BR: 'carne para ensopado' }, { k: [250, 26, 0, 15], f: 'R', dias: 3, sub: { vegana: 'champinon', vegetariana: 'champinon' } }),
-  E('cerdo', 'carne_roja', 'pork|pork loin|pork chops|pork shoulder|pork tenderloin', 'cerdo|carne de cerdo|chancho|lomo de cerdo|chuleta de cerdo|bondiola', 'carne de porco|lombo de porco|bisteca de porco', { PE: 'carne de cerdo', AR: 'carne de cerdo', CL: 'carne de cerdo', BR: 'lombo de porco' }, { k: [242, 27, 0, 14], f: 'RC', dias: 3, sub: { sin_cerdo: 'pollo_pechuga', vegana: 'garbanzo', vegetariana: 'garbanzo' } }),
+  E('res_bistec', 'carne_roja', 'beef steak|steak|sirloin|flank steak|skirt steak|beef tenderloin|ribeye', 'bistec|filete de res|lomo de res|bife|churrasco|entraña|lomo fino|bisteck', 'bife|contrafile|fraldinha', { PE: 'bistec de res', MX: 'bistec de res', CO: 'carne de res para asar', AR: 'bife de chorizo', CL: 'filete de vacuno', ES: 'filete de ternera', BR: 'bife' }, { gu: 200, k: [250, 26, 0, 15], f: 'R', dias: 3, excluir: ['molida'], sub: { vegana: 'champinon', vegetariana: 'champinon' } }),
+  E('res', 'carne_roja', 'beef|stew beef|beef chuck|chuck roast|brisket', 'carne de res|carne para guiso|asado|res|carne de vacuno|ternera', 'carne bovina|acem|patinho', { PE: 'carne de res para guiso', MX: 'carne de res para guisar', AR: 'carne para guiso', CL: 'carne de vacuno', ES: 'ternera para guisar', BR: 'carne para ensopado' }, { k: [250, 26, 0, 15], f: 'R', dias: 3, excluir: ['molida'], sub: { vegana: 'champinon', vegetariana: 'champinon' } }),
+  E('cerdo', 'carne_roja', 'pork|pork loin|pork chops|pork shoulder|pork tenderloin|pork roast|pork sirloin|pork butt|pork belly|boneless pork', 'cerdo|carne de cerdo|chancho|lomo de cerdo|chuleta de cerdo|bondiola', 'carne de porco|lombo de porco|bisteca de porco', { PE: 'lomo de cerdo', MX: 'lomo de cerdo', CO: 'lomo de cerdo', AR: 'bondiola de cerdo', CL: 'lomo de cerdo', ES: 'lomo de cerdo', BR: 'lombo de porco' }, { k: [242, 27, 0, 14], f: 'RC', dias: 3, excluir: ['molida'], sub: { sin_cerdo: 'pollo_pechuga', vegana: 'garbanzo', vegetariana: 'garbanzo' } }),
   E('tocino', 'carne_roja', 'bacon', 'tocino|tocineta|panceta|beicon|bacon', 'bacon|toucinho', { PE: 'tocino', MX: 'tocino', CO: 'tocineta', AR: 'panceta', CL: 'tocino', ES: 'beicon', BR: 'bacon' }, { k: [541, 37, 1, 42], f: 'RC', dias: 7, sub: { sin_cerdo: 'pavo', vegana: 'champinon', vegetariana: 'champinon' } }),
   E('jamon', 'carne_roja', 'ham', 'jamon|jamón', 'presunto', { BR: 'presunto' }, { k: [145, 21, 1.5, 6], f: 'RC', dias: 5, sub: { sin_cerdo: 'pavo' } }),
   E('chorizo', 'carne_roja', 'chorizo|sausage|sausages|italian sausage', 'chorizo|salchicha|longaniza', 'linguica|linguiça|salsicha', { BR: 'linguiça' }, { gu: 80, k: [455, 24, 2, 38], f: 'RC', dias: 7, sub: { sin_cerdo: 'pavo' } }),
@@ -73,7 +73,11 @@ export const GLOSARIO = [
   E('zapallo', 'verdura', 'pumpkin|butternut squash|squash|winter squash', 'zapallo|calabaza|ahuyama|auyama|zapallo loche', 'abobora|abóbora', { PE: 'zapallo', MX: 'calabaza', CO: 'ahuyama', AR: 'zapallo', CL: 'zapallo', ES: 'calabaza', BR: 'abóbora' }, { gml: 0.5, k: [26, 1, 6.5, 0.1], dias: 14 }),
   E('zapallito', 'verdura', 'zucchini|zucchinis|courgette|courgettes', 'zapallito italiano|calabacita|calabacín|zucchini|zapallo italiano', 'abobrinha', { PE: 'zapallito italiano', MX: 'calabacita', CO: 'zucchini', AR: 'zucchini', CL: 'zapallo italiano', ES: 'calabacín', BR: 'abobrinha' }, { gu: 200, gml: 0.5, k: [17, 1.2, 3.1, 0.3], dias: 7 }),
   E('pimiento', 'verdura', 'bell pepper|bell peppers|red pepper|green pepper|red bell pepper|green bell pepper|capsicum', 'pimiento|pimientos|pimiento morrón|morrón|pimentón', 'pimentao|pimentão', { PE: 'pimiento', MX: 'pimiento morrón', CO: 'pimentón', AR: 'morrón', CL: 'pimentón', ES: 'pimiento', BR: 'pimentão' }, { gu: 160, gml: 0.6, k: [26, 1, 6, 0.3], dias: 10 }),
-  E('aji', 'verdura', 'chili|chilies|chili pepper|chile|jalapeno|jalapeño|jalapeno pepper|serrano|hot pepper|red chili|green chili|thai chili|habanero|habanero pepper|scotch bonnet|chipotle|red chilli|green chilli|chilli', 'ají|ajíes|chile|chiles|jalapeño|guindilla|rocoto|ají limo|ají amarillo|chile serrano', 'pimenta|pimenta dedo-de-moca|pimenta malagueta', { PE: 'ají amarillo', MX: 'chile serrano', CO: 'ají', AR: 'ají', CL: 'ají verde', ES: 'guindilla', BR: 'pimenta dedo-de-moça' }, { gu: 20, k: [40, 2, 9, 0.4], dias: 14 }),
+  E('aji', 'verdura', 'chili|chilies|chili pepper|chile|jalapeno|jalapeño|jalapeno pepper|serrano|hot pepper|red chili|green chili|thai chili|habanero|habanero pepper|scotch bonnet|red chilli|green chilli|chilli', 'ají|ajíes|chile|chiles|jalapeño|guindilla|rocoto|ají limo|ají amarillo|chile serrano', 'pimenta|pimenta dedo-de-moca|pimenta malagueta', { PE: 'ají amarillo', MX: 'chile serrano', CO: 'ají', AR: 'ají', CL: 'ají verde', ES: 'guindilla', BR: 'pimenta dedo-de-moça' }, { gu: 20, k: [40, 2, 9, 0.4], dias: 14 }),
+  // Chiles secos mexicanos: en Perú lo más parecido es el ají panca (seco, suave y ahumado).
+  E('chile_ancho', 'verdura', 'ancho chile|ancho chiles|ancho chili|ancho chilies|ancho pepper|dried ancho', 'chile ancho|chiles anchos|ají panca molido', 'pimenta ancho', { PE: 'ají panca', MX: 'chile ancho', CO: 'ají seco', AR: 'ají seco', CL: 'ají seco', ES: 'ñora', BR: 'pimenta seca' }, { gu: 12, k: [281, 12, 51, 8], dias: 180 }),
+  E('chile_guajillo', 'verdura', 'guajillo|guajillo chile|guajillo chiles|pasilla|pasilla chile|pasilla chiles|chile de arbol|arbol chile|arbol chiles|dried chile|dried chiles|dried chili|dried chilies|dried red chiles', 'chile guajillo|chiles guajillo|chile pasilla|chile de árbol|chile seco|chiles secos|ají panca|ají seco|ají panca molido', 'pimenta seca', { PE: 'ají panca', MX: 'chile guajillo', CO: 'ají seco', AR: 'ají seco', CL: 'ají seco', ES: 'guindilla seca', BR: 'pimenta seca' }, { gu: 6, k: [281, 12, 51, 8], dias: 180 }),
+  E('chipotle', 'condimento_salsa', 'chipotle|chipotles|chipotle in adobo|chipotle chile|chipotle chiles|chipotle pepper|chipotle peppers', 'chipotle|chiles chipotles|chipotle adobado|chipotle en adobo|ají panca en pasta', 'chipotle', { PE: 'ají panca en pasta', MX: 'chiles chipotles adobados', CO: 'chipotle en adobo', AR: 'chipotle en adobo', ES: 'chipotle en adobo', BR: 'pimenta chipotle' }, { vende: 'unidad', gu: 10, k: [60, 2, 9, 2], dias: 30, notaPais: { PE: 'En los supermercados de Perú casi no hay chipotle en adobo: usa 1 cucharada de ají panca en pasta y una pizca de páprika ahumada por cada chipotle.' } }),
   E('lechuga', 'verdura', 'lettuce|romaine|romaine lettuce|iceberg lettuce|mixed greens|salad greens', 'lechuga|lechuga romana|lechuga americana', 'alface', { BR: 'alface' }, { gu: 400, gml: 0.2, k: [15, 1.4, 2.9, 0.2], dias: 5 }),
   E('espinaca', 'verdura', 'spinach|baby spinach', 'espinaca|espinacas', 'espinafre', { BR: 'espinafre' }, { gml: 0.2, k: [23, 2.9, 3.6, 0.4], dias: 5 }),
   E('brocoli', 'verdura', 'broccoli|broccoli florets', 'brócoli|brocoli|brécol', 'brocolis|brócolis', { BR: 'brócolis' }, { gu: 350, gml: 0.35, k: [34, 2.8, 7, 0.4], dias: 7 }),
@@ -95,6 +99,7 @@ export const GLOSARIO = [
   E('romero', 'especia_hierba', 'rosemary|fresh rosemary|dried rosemary', 'romero', 'alecrim', {}, { gml: 0.3, k: [131, 3.3, 21, 6], dias: 365 }),
   E('laurel', 'especia_hierba', 'bay leaf|bay leaves', 'laurel|hoja de laurel|hojas de laurel', 'louro|folha de louro', {}, { vende: 'unidad', gu: 0.2, k: [313, 7.6, 75, 8], desp: 1, dias: 365 }),
   E('comino', 'especia_hierba', 'cumin|ground cumin|cumin seeds', 'comino|comino molido', 'cominho', {}, { gml: 0.5, k: [375, 18, 44, 22], desp: 1, dias: 365 }),
+  E('achiote', 'especia_hierba', 'achiote|annatto|achiote paste|achiote powder|annatto seeds|annatto powder', 'achiote|pasta de achiote|achiote molido|onoto|bija', 'urucum|colorau', { PE: 'achiote', MX: 'pasta de achiote', CO: 'achiote', AR: 'achiote', CL: 'achiote', ES: 'achiote', BR: 'colorau' }, { gml: 0.6, k: [300, 6, 60, 5], dias: 365 }),
   E('pimenton', 'especia_hierba', 'paprika|smoked paprika|sweet paprika', 'pimentón|páprika|paprika|pimentón dulce|pimentón ahumado', 'paprica|páprica', { PE: 'páprika', MX: 'paprika', AR: 'pimentón', CL: 'paprika', ES: 'pimentón', BR: 'páprica' }, { gml: 0.45, k: [282, 14, 54, 13], dias: 365 }),
   E('aji_polvo', 'especia_hierba', 'chili powder|cayenne|cayenne pepper|red pepper flakes|crushed red pepper|chili flakes', 'ají en polvo|chile en polvo|pimienta de cayena|ají molido|hojuelas de chile', 'pimenta calabresa|pimenta caiena', { PE: 'ají panca en polvo', MX: 'chile en polvo', AR: 'ají molido', BR: 'pimenta calabresa' }, { gml: 0.45, k: [282, 13, 50, 14], dias: 365 }),
   E('canela', 'especia_hierba', 'cinnamon|ground cinnamon|cinnamon stick|cinnamon sticks', 'canela|canela molida|canela en rama', 'canela', {}, { gml: 0.55, k: [247, 4, 81, 1.2], desp: 1, dias: 365 }),
@@ -185,11 +190,28 @@ for (const ing of GLOSARIO) {
 export const porId = (id) => GLOSARIO.find((g) => g.id === id)
 
 // Busca el ingrediente del glosario que mejor calza con un nombre ("2 boneless chicken thighs" → pollo_pierna).
+// Si el nombre dice de qué animal es la carne, no se acepta una carne de otro animal
+// ("sirloin pork roast" es cerdo aunque "sirloin" suela ser de res).
+const ANIMAL_DE = {
+  cerdo: 'cerdo', tocino: 'cerdo', jamon: 'cerdo', chorizo: 'cerdo',
+  res: 'res', res_bistec: 'res', carne_molida: 'res',
+  pollo: 'pollo', pollo_pechuga: 'pollo', pollo_pierna: 'pollo', pollo_ala: 'pollo',
+}
+const PALABRAS_ANIMAL = [
+  ['cerdo', /\b(pork|cerdo|chancho|porco|puerco)\b/],
+  ['res', /\b(beef|res|vacuno|ternera|bovina)\b/],
+  ['pollo', /\b(chicken|pollo|frango)\b/],
+]
+
 export function buscarIngrediente(nombre) {
   const palabras = raices(nombre)
   if (!palabras.length) return null
+  const texto = normalizar(nombre)
+  const animales = new Set(PALABRAS_ANIMAL.filter(([, patron]) => patron.test(texto)).map(([a]) => a))
   let mejor = null
   for (const entrada of INDICE) {
+    const animal = ANIMAL_DE[entrada.ing.id]
+    if (animal && animales.size && !animales.has(animal)) continue
     // Todas las palabras del sinónimo deben estar, en orden, dentro del nombre.
     let desde = 0
     let ok = true

@@ -124,3 +124,13 @@ test('junta ingredientes repetidos y calcula el peso de cada galleta', async () 
   assert.ok(r.peso_porcion_g > 50 && r.peso_porcion_g < 100) // (345 g harina + 230 g mantequilla) / 8
   assert.match(r.advertencias.join(' '), /1 1\/2 tazas.*3 cucharadas/)
 })
+
+test('no confunde la carne de un animal con la de otro ni los chiles mexicanos', () => {
+  const id = (n) => buscarIngrediente(n)?.ing.id
+  assert.equal(id('boneless blade-end loin or sirloin pork roast'), 'cerdo')
+  assert.equal(id('sirloin steak'), 'res_bistec')
+  assert.equal(id('2 whole ancho chiles'), 'chile_ancho')
+  assert.equal(id('1 chipotle chile packed in adobo sauce'), 'chipotle')
+  assert.equal(id('achiote powder or paste'), 'achiote')
+  assert.equal(nombreLocal(buscarIngrediente('guajillo chiles').ing, 'PE'), 'ají panca')
+})
