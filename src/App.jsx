@@ -46,6 +46,17 @@ export default function App() {
     setHistorial((h) => [sesion, ...h.filter((x) => x.id !== sesion.id)].slice(0, 12))
   }, [sesion, setHistorial])
 
+  // Cada cambio de pantalla se registra en GoatCounter como una página ("/compras", "/recetario"…),
+  // para saber qué partes de la app se usan. La primera carga ya la cuenta GoatCounter solo.
+  const primeraPantalla = useRef(true)
+  useEffect(() => {
+    if (primeraPantalla.current) {
+      primeraPantalla.current = false
+      return
+    }
+    window.goatcounter?.count?.({ path: `/${pantalla === 'inicio' ? '' : pantalla}`, title: `espaciococina · ${pantalla}` })
+  }, [pantalla])
+
   const ir = useCallback((destino) => {
     setPantalla(destino)
     if (destino !== 'cocinemos') window.scrollTo({ top: 0 })
@@ -289,7 +300,7 @@ function Marco({ pantalla, ir, ocultarNav, children }) {
         </div>
       </header>
       <main className="principal">{children}</main>
-      <footer className="creditos">Precios: tiendas en línea de cada supermercado · Mapas: © OpenStreetMap · Traducción: MyMemory · Recetas: TheMealDB · Fotos: Unsplash</footer>
+      <footer className="creditos">Precios: tiendas en línea de cada supermercado · Mapas: © OpenStreetMap · Traducción: MyMemory · Recetas: TheMealDB · Fotos: Unsplash · Visitas contadas con GoatCounter, sin cookies</footer>
       {!ocultarNav && (
         <nav className="nav-movil" aria-label="Principal">
           {NAV.map((n) => (
