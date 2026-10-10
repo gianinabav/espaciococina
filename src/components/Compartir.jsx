@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { formatoDinero, listaElegida } from '../lib/compras.js'
+import { formatoDinero, linkCarrito, listaElegida } from '../lib/compras.js'
 
 function textoReceta(r) {
   return [
@@ -26,6 +26,7 @@ function textoCompras(lista, perfil) {
         '',
         `📍 ${c.lugar.nombre} — ${formatoDinero(c.subtotal, perfil)}`,
         ...(s ? [`   ${[s.nombre, s.direccion].filter(Boolean).join(', ')} · a ${s.distancia_km} km · ${s.mapa}`] : []),
+        ...(linkCarrito(c) ? [`   🛒 Carrito listo en línea: ${linkCarrito(c).url}`] : []),
         ...c.items.map((it) => `☐ ${it.producto ? it.producto.nombre : it.nombre} · ${it.paquetes > 1 ? `${it.paquetes} × ` : ''}${it.presentacion.descripcion} · ${formatoDinero(it.subtotal, perfil)}`),
       ]
     }),

@@ -82,6 +82,7 @@ export function lugaresDeCompra(usuario, catalogo, tiendas) {
       nombre: c.nombre,
       web: c.web,
       enLinea: true,
+      carrito: c.carrito,
       sucursal: tiendas?.sucursales?.[c.id] ?? null,
       buscarEnMapa: `https://www.google.com/maps/search/${encodeURIComponent(`${c.nombre} supermercado ${usuario?.zona ?? ''} ${pais.nombre}`)}`,
     }))
@@ -242,8 +243,8 @@ export function formatoCantidad(cantidad, unidad) {
 
 // Clave para saber si hay que volver a pedir precios (cambió la lista o el país).
 export function claveCatalogo(items, usuario) {
-  // "v3": se sube cuando cambia la forma de elegir productos, para no usar precios viejos guardados.
-  return `v3|${usuario?.pais}|${items.map((i) => `${i.indice}:${i.nombre}:${Math.round(i.cantidad)}${i.unidad}`).join(',')}`
+  // "v4": se sube cuando cambia la forma de elegir productos, para no usar precios viejos guardados.
+  return `v4|${usuario?.pais}|${items.map((i) => `${i.indice}:${i.nombre}:${Math.round(i.cantidad)}${i.unidad}`).join(',')}`
 }
 
 // La lista que eligió la persona para la receta en curso.
@@ -253,4 +254,14 @@ export function listaElegida(sesion, usuario, tiendas = null) {
   const catalogo = sesion.catalogo?.clave === claveCatalogo(items, usuario) ? sesion.catalogo : null
   const listas = armarListas(items, usuario, catalogo, tiendas)
   return listas.find((l) => l.id === sesion.listaId) ?? listas[0] ?? null
+}
+
+// Link que abre el carrito de la tienda ya lleno con los productos de la lista (tiendas VTEX).
+// Devuelve null si la tienda no lo permite o ningún producto tiene código.
+export function linkCarrito(carrito) {
+  if (!carrito.lugar.carrito) return null
+  const conCodigo = carrito.items.filter((it) => it.producto?.sku && it.precio?.estado === 'en_linea')
+  if (!conCodigo.length) return null
+  const params = conCodigo.flatMap((it) => [`sku=${encodeURIComponent(it.producto.sku)}`, `qty=${Math.max(1, it.paquetes || 1)}`, `seller=${encodeURIComponent(it.producto.vendedor ?? '1')}`])
+  return { url: `${carrito.lugar.web}/checkout/cart/add?${params.join('&')}&sc=1`, incluidos: conCodigo.length, faltan: carrito.items.length - conCodigo.length }
 }

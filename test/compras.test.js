@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { armarListas, calcularSobrantes, itemsAComprar } from '../src/lib/compras.js'
+import { armarListas, calcularSobrantes, itemsAComprar, linkCarrito } from '../src/lib/compras.js'
 
 const usuario = { pais: 'PE', zona: 'Miraflores' }
 const receta = {
@@ -72,4 +72,18 @@ test('los sobrantes salen de la presentación real comprada', () => {
   const papa = calcularSobrantes(barata).find((s) => s.nombre === 'Papa')
   assert.equal(papa.cantidad, 50) // compra 500 g, usa 450 g
   assert.equal(calcularSobrantes(barata).find((s) => s.nombre === 'Aceite de oliva').cantidad, 170)
+})
+
+test('arma el link que llena el carrito solo con productos en línea', () => {
+  const carrito = {
+    lugar: { web: 'https://www.wong.pe', carrito: true },
+    items: [
+      { producto: { sku: '43931', vendedor: '1' }, paquetes: 2, precio: { estado: 'en_linea' } },
+      { producto: null, paquetes: 1, precio: { estado: 'estimado' } },
+    ],
+  }
+  const link = linkCarrito(carrito)
+  assert.equal(link.url, 'https://www.wong.pe/checkout/cart/add?sku=43931&qty=2&seller=1&sc=1')
+  assert.equal(link.faltan, 1)
+  assert.equal(linkCarrito({ ...carrito, lugar: { web: 'https://www.vea.com.ar' } }), null)
 })

@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
 import { PAISES, enumerar } from '../lib/datos.js'
 import { enviar } from '../lib/api.js'
-import { armarListas, itemsAComprar, formatoDinero, formatoCantidad, claveCatalogo } from '../lib/compras.js'
+import { armarListas, itemsAComprar, formatoDinero, formatoCantidad, claveCatalogo, linkCarrito } from '../lib/compras.js'
 import { Aviso, Miniatura, SelectorPorciones } from './comunes.jsx'
+import ListaGuardable from './ListaGuardable.jsx'
 
 
 export default function Compras({ sesion, perfil, actualizar, ir, compartir, cambiarPorciones, tiendas, cargarTiendas, estadoServidor }) {
@@ -17,6 +18,7 @@ export default function Compras({ sesion, perfil, actualizar, ir, compartir, cam
   const catalogo = sesion.catalogo?.clave === clave ? sesion.catalogo : null
   const [buscando, setBuscando] = useState(false)
   const [errorPrecios, setErrorPrecios] = useState('')
+  const [verLista, setVerLista] = useState(false)
 
   // Precios reales: se piden cuando cambia la lista (porciones, "ya lo tengo", alternativas).
   useEffect(() => {
@@ -53,6 +55,25 @@ export default function Compras({ sesion, perfil, actualizar, ir, compartir, cam
     actualizar({ seleccion: { ...seleccion, economicos, omitidos }, listaId: 'barata' })
   }
   const exceso = lista ? lista.total - presupuesto : 0
+  const enLinea = (lista?.carritos ?? []).map((c) => ({ c, link: linkCarrito(c) })).filter((x) => x.link)
+  const masCercana = datosTiendas?.cercanas?.[0] ?? null
+
+  // Lo mismo que se ve en pantalla, en una hoja para capturar o guardar como imagen.
+  const hojaLista = () => ({
+    titulo: receta.titulo,
+    subtitulo: `Compra para ${receta.porciones} ${receta.porciones === 1 ? 'porción' : 'porciones'} · ${lista?.nombre ?? ''}`,
+    grupos: (lista?.carritos ?? []).map((c) => ({
+      titulo: c.lugar.nombre,
+      subtotal: formatoDinero(c.subtotal, perfil),
+      nota: c.lugar.sucursal ? [c.lugar.sucursal.nombre, c.lugar.sucursal.direccion].filter(Boolean).join(', ') : '',
+      items: c.items.map((it) => ({
+        nombre: it.nombre,
+        detalle: [it.producto?.nombre, it.paquetes > 1 ? `× ${it.paquetes}` : ''].filter(Boolean).join(' ') || `Necesitas ${it.cantidad ? formatoCantidad(it.cantidad, it.unidad) : 'un poco'}`,
+        precio: formatoDinero(it.subtotal, perfil),
+      })),
+    })),
+    total: lista ? formatoDinero(lista.total, perfil) : '',
+  })
 
   return (
     <>
@@ -194,6 +215,64 @@ export default function Compras({ sesion, perfil, actualizar, ir, compartir, cam
         )}
       </section>
 
+      {!buscando && lista && items.length > 0 && (
+        <section>
+          <div className="seccion-cab">
+            <span className="num">02</span>
+            <b>¿Cómo quieres comprar?</b>
+          </div>
+          <div className="donde">
+            <div>
+              <span className="sobretitulo" style={{ margin: 0 }}>
+                Lo más rápido
+              </span>
+              <h3>Pídelo en línea</h3>
+              {enLinea.length ? (
+                <p>Abrimos la web del supermercado con tu carrito ya lleno. Solo revisas y pagas.</p>
+              ) : (
+                <p>{cadenasPais.length ? 'Esta tienda no permite llenar el carrito desde un link: guarda tu lista y búscala en su web.' : `En ${pais.nombre} no hay supermercados con catálogo en línea gratuito: guarda tu lista y úsala en tu app de delivery.`}</p>
+              )}
+              <div className="acciones">
+                {enLinea.map(({ c, link }) => (
+                  <a key={c.lugar.id} className="boton" href={link.url} target="_blank" rel="noreferrer">
+                    Llenar mi carrito en {c.lugar.nombre}
+                  </a>
+                ))}
+                {enLinea.some(({ link }) => link.faltan) && (
+                  <span className="suave chico">
+                    {enLinea.reduce((n, { link }) => n + link.faltan, 0)} producto(s) no estaban en línea: agrégalos a mano.
+                  </span>
+                )}
+              </div>
+            </div>
+            <div>
+              <span className="sobretitulo" style={{ margin: 0 }}>
+                Lo más cerca
+              </span>
+              <h3>{masCercana ? masCercana.nombre : 'Ve a tu bodega o mercado'}</h3>
+              <p>
+                {masCercana
+                  ? `${masCercana.tipoNombre}${masCercana.direccion ? `, ${masCercana.direccion}` : ''} · a ${masCercana.distancia_km} km de ${datosTiendas.centro.nombre}.`
+                  : tiendas?.estado === 'cargando'
+                    ? 'Buscando la tienda más cercana…'
+                    : 'Escribe tu zona en tu perfil para encontrar la tienda más cercana.'}{' '}
+                Lleva tu lista en el celular.
+              </p>
+              <div className="acciones">
+                {masCercana && (
+                  <a className="boton" href={masCercana.mapa} target="_blank" rel="noreferrer">
+                    Cómo llegar
+                  </a>
+                )}
+                <button className="boton secundario" onClick={() => setVerLista(true)}>
+                  Ver lista para llevar
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+
       {!buscando &&
         lista?.carritos.map((c, n) => {
           const listos = c.items.filter((it) => comprados[`${c.lugar.id}:${it.indice}`]).length
@@ -222,10 +301,16 @@ export default function Compras({ sesion, perfil, actualizar, ir, compartir, cam
                   <a className="boton chico-boton" href={s ? s.mapa : c.lugar.buscarEnMapa} target="_blank" rel="noreferrer">
                     {s ? 'Cómo llegar' : 'Ver locales cercanos'}
                   </a>
-                  {c.lugar.web && (
-                    <a className="boton secundario chico-boton" href={c.lugar.web} target="_blank" rel="noreferrer">
-                      Comprar en línea
+                  {linkCarrito(c) ? (
+                    <a className="boton secundario chico-boton" href={linkCarrito(c).url} target="_blank" rel="noreferrer">
+                      Llenar mi carrito en línea
                     </a>
+                  ) : (
+                    c.lugar.web && (
+                      <a className="boton secundario chico-boton" href={c.lugar.web} target="_blank" rel="noreferrer">
+                        Comprar en línea
+                      </a>
+                    )
                   )}
                 </div>
               </div>
@@ -326,6 +411,9 @@ export default function Compras({ sesion, perfil, actualizar, ir, compartir, cam
       </section>
 
       <div className="pie-accion">
+        <button className="boton secundario" onClick={() => setVerLista(true)} disabled={!lista}>
+          Ver lista para guardar
+        </button>
         <button className="boton secundario" onClick={() => compartir('compras')}>
           Compartir lista
         </button>
@@ -333,6 +421,7 @@ export default function Compras({ sesion, perfil, actualizar, ir, compartir, cam
           Ver sobrantes
         </button>
       </div>
+      {verLista && lista && <ListaGuardable {...hojaLista()} cerrar={() => setVerLista(false)} />}
     </>
   )
 }

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { enviar } from '../lib/api.js'
 import { Aviso, Cargando, Foto, Miniatura, SelectorPorciones, textoPorciones } from './comunes.jsx'
 import { categoriaPrincipal } from './Inicio.jsx'
+import ListaGuardable from './ListaGuardable.jsx'
 
 const ICONOS_CAMBIO = {
   medidas: '⚖️',
@@ -18,6 +19,7 @@ export default function Receta({ sesion, perfil, ir, compartir, cambiarPorciones
   const n = r.nutricion_por_porcion
   const [cargando, setCargando] = useState(false)
   const [error, setError] = useState('')
+  const [verLista, setVerLista] = useState(false)
 
   // Vuelve a adaptar la receta original con las porciones nuevas (cantidades redondas y tiempos).
   const readaptar = async () => {
@@ -56,9 +58,14 @@ export default function Receta({ sesion, perfil, ir, compartir, cambiarPorciones
             </div>
             <div className="porciones-fila">
               <SelectorPorciones valor={r.porciones} onCambio={cambiarPorciones} porcion={r.porcion} />
-              <button className="enlace" onClick={() => ir('cocinemos')}>
-                Cocinar ahora
-              </button>
+              <span className="fila" style={{ gap: 18 }}>
+                <button className="enlace" onClick={() => setVerLista(true)}>
+                  Lista de ingredientes
+                </button>
+                <button className="enlace" onClick={() => ir('cocinemos')}>
+                  Cocinar ahora
+                </button>
+              </span>
             </div>
           </div>
         </div>
@@ -199,6 +206,9 @@ export default function Receta({ sesion, perfil, ir, compartir, cambiarPorciones
       </section>
 
       <div className="pie-accion">
+        <button className="boton secundario" onClick={() => setVerLista(true)}>
+          Ver lista para guardar
+        </button>
         <button className="boton secundario" onClick={() => compartir('receta')}>
           Compartir
         </button>
@@ -209,6 +219,14 @@ export default function Receta({ sesion, perfil, ir, compartir, cambiarPorciones
           Armar mi compra
         </button>
       </div>
+      {verLista && (
+        <ListaGuardable
+          titulo={r.titulo}
+          subtitulo={`${r.porciones} ${textoPorciones(r.porciones, r.porcion)}${r.tiempo_total_min ? ` · ${r.tiempo_total_min} min` : ''} · ${r.ingredientes.length} ingredientes`}
+          grupos={[{ titulo: 'Ingredientes', items: r.ingredientes.map((ing) => ({ nombre: ing.nombre, cantidad: ing.cantidad_texto, detalle: ing.opcional ? 'Opcional' : '' })) }]}
+          cerrar={() => setVerLista(false)}
+        />
+      )}
     </>
   )
 }

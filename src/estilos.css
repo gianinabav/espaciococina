@@ -444,3 +444,39 @@ input::placeholder, textarea::placeholder { color: var(--gris-claro); }
 .portada { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: end; margin-bottom: 44px; }
 .portada-texto { display: flex; flex-direction: column; justify-content: space-between; gap: 24px; height: 100%; }
 @media (max-width: 760px) { .portada { grid-template-columns: 1fr; gap: 24px; } }
+
+/* ---------- Lista para guardar o capturar ---------- */
+.hoja { position: fixed; inset: 0; z-index: 70; background: var(--papel-2); overflow-y: auto; }
+.hoja-barra { position: sticky; top: 0; z-index: 1; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px var(--margen); background: var(--papel); border-bottom: 1px solid var(--linea); }
+.hoja-barra .suave { text-align: center; flex: 1; }
+@media (max-width: 560px) { .hoja-barra .suave { display: none; } }
+.hoja-papel { max-width: 560px; margin: 0 auto; padding: 22px 22px 28px; background: var(--papel); min-height: calc(100vh - 54px); }
+@media (min-width: 600px) { .hoja-papel { margin: 24px auto 40px; min-height: 0; border: 1px solid var(--linea); padding: 32px; } }
+.hoja-cab { display: flex; justify-content: space-between; font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--gris); border-bottom: 1px solid var(--tinta); padding-bottom: 8px; margin-bottom: 18px; }
+.hoja-cab span:first-child { font-family: var(--titular); font-size: 0.95rem; text-transform: none; letter-spacing: 0; color: var(--tinta); }
+.hoja-papel h1 { font-size: clamp(1.6rem, 7vw, 2.3rem); margin-bottom: 6px; }
+.hoja-sub { font-size: 0.74rem; color: var(--gris); margin-bottom: 14px; }
+.hoja-grupo { border-top: 1px solid var(--tinta); padding-top: 8px; margin-top: 12px; }
+.hoja-grupo-cab { display: flex; justify-content: space-between; gap: 12px; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.06em; }
+.hoja-grupo-cab b { font-weight: 500; }
+.hoja-nota { font-size: 0.68rem; color: var(--gris); margin: 4px 0 0; }
+.hoja-papel ol { list-style: none; margin: 4px 0 0; padding: 0; }
+.hoja-papel li { display: grid; grid-template-columns: 14px 1fr auto; gap: 10px; align-items: baseline; padding: 6px 0; border-bottom: 1px solid var(--linea); font-size: 0.84rem; line-height: 1.35; }
+.hoja-papel li:last-child { border-bottom: 0; }
+.hoja-papel li small { display: block; color: var(--gris); font-size: 0.68rem; }
+.hoja-check { width: 11px; height: 11px; border: 1px solid var(--tinta); align-self: center; }
+.hoja-cant { text-align: right; white-space: nowrap; }
+.hoja-papel.media li { padding: 4px 0; font-size: 0.76rem; }
+.hoja-papel.chica li { padding: 3px 0; font-size: 0.7rem; }
+.hoja-papel.chica li small { display: none; }
+.hoja-total { display: flex; justify-content: space-between; align-items: baseline; border-top: 1px solid var(--tinta); margin-top: 12px; padding-top: 10px; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; }
+.hoja-total b { font-family: var(--titular); font-weight: 400; font-size: 1.7rem; letter-spacing: 0; }
+
+/* ---------- Dónde comprar ---------- */
+.donde { display: grid; grid-template-columns: 1fr 1fr; border-top: 1px solid var(--tinta); border-bottom: 1px solid var(--linea); margin-bottom: 44px; }
+.donde > div { padding: 16px 20px 20px 0; display: flex; flex-direction: column; gap: 10px; }
+.donde > div + div { padding-left: 20px; border-left: 1px solid var(--linea); }
+.donde h3 { margin: 0; }
+.donde p { margin: 0; font-size: 0.8rem; color: var(--gris); }
+.donde .acciones { display: flex; flex-direction: column; gap: 8px; margin-top: auto; }
+@media (max-width: 760px) { .donde { grid-template-columns: 1fr; } .donde > div + div { padding-left: 0; border-left: 0; border-top: 1px solid var(--linea); } }

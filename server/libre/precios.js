@@ -9,18 +9,18 @@ import { cache } from './cache.js'
 
 export const CADENAS = {
   PE: [
-    { id: 'plazavea', nombre: 'Plaza Vea', web: 'https://www.plazavea.com.pe', osm: 'plaza ?vea', mapa: 'plaza ?vea' },
-    { id: 'metro', nombre: 'Metro', web: 'https://www.metro.pe', osm: '^(hipermercados? |supermercados? )?metro\\b', mapa: 'metro' },
-    { id: 'wong', nombre: 'Wong', web: 'https://www.wong.pe', osm: '\\bwong\\b', mapa: 'wong' },
+    { id: 'plazavea', carrito: true, nombre: 'Plaza Vea', web: 'https://www.plazavea.com.pe', osm: 'plaza ?vea', mapa: 'plaza ?vea' },
+    { id: 'metro', carrito: true, nombre: 'Metro', web: 'https://www.metro.pe', osm: '^(hipermercados? |supermercados? )?metro\\b', mapa: 'metro' },
+    { id: 'wong', carrito: true, nombre: 'Wong', web: 'https://www.wong.pe', osm: '\\bwong\\b', mapa: 'wong' },
   ],
-  MX: [{ id: 'chedraui', nombre: 'Chedraui', web: 'https://www.chedraui.com.mx', osm: 'chedraui', mapa: 'chedraui' }],
+  MX: [{ id: 'chedraui', carrito: true, nombre: 'Chedraui', web: 'https://www.chedraui.com.mx', osm: 'chedraui', mapa: 'chedraui' }],
   CO: [
     { id: 'exito', nombre: 'Éxito', web: 'https://www.exito.com', osm: '[eé]xito', mapa: 'xito' },
     { id: 'carulla', nombre: 'Carulla', web: 'https://www.carulla.com', osm: 'carulla', mapa: 'carulla' },
-    { id: 'olimpica', nombre: 'Olímpica', web: 'https://www.olimpica.com', osm: 'ol[ií]mpica', mapa: 'mpica' },
+    { id: 'olimpica', carrito: true, nombre: 'Olímpica', web: 'https://www.olimpica.com', osm: 'ol[ií]mpica', mapa: 'mpica' },
   ],
   AR: [
-    { id: 'carrefour', nombre: 'Carrefour', web: 'https://www.carrefour.com.ar', osm: 'carrefour', mapa: 'carrefour' },
+    { id: 'carrefour', carrito: true, nombre: 'Carrefour', web: 'https://www.carrefour.com.ar', osm: 'carrefour', mapa: 'carrefour' },
     { id: 'vea', nombre: 'Vea', web: 'https://www.vea.com.ar', osm: '^(supermercados? )?vea\\b', mapa: 'vea' },
     { id: 'disco', nombre: 'Disco', web: 'https://www.disco.com.ar', osm: '^(supermercados? )?disco\\b', mapa: 'disco' },
     { id: 'jumbo', nombre: 'Jumbo', web: 'https://www.jumbo.com.ar', osm: '\\bjumbo\\b', mapa: 'jumbo' },
@@ -28,6 +28,7 @@ export const CADENAS = {
 }
 
 // osm: cómo reconocer sus locales en el mapa; mapa: texto simple para buscarlos en OpenStreetMap.
+// carrito: la tienda acepta un link que llena el carrito con varios productos (probado a mano).
 
 // Categorías de la tienda que nunca son comida.
 // Solo se mira la sección principal ("/Limpieza/…"), no las subsecciones: "Repostería/…/Decoración" sí es comida.
@@ -38,7 +39,7 @@ const DELATORES = ['codorniz', 'pato', 'mezcla', 'mayonesa', 'mani', 'surtido', 
 const ENVASES = new Set(['filete', 'pack', 'bolsa', 'sobre', 'frasco', 'lata', 'bandeja', 'caja', 'paquete', 'malla', 'atado', 'granel', 'botella', 'doypack', 'pote', 'tarro', 'fresco', 'fresca'])
 
 const UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) espaciococina/1.0 (proyecto educativo)'
-const guardados = cache('catalogos', 6)
+const guardados = cache('catalogos-v2', 6) // v2: guarda el SKU de cada producto
 
 // Pocas consultas a la vez, para no cargar las tiendas.
 let activas = 0
@@ -72,7 +73,8 @@ async function buscarEnCatalogo(cadena, termino) {
   const lista = productos
     .map((p) => {
       const item = p.items?.find((it) => it.sellers?.some((s) => s.commertialOffer?.Price > 0 && s.commertialOffer?.AvailableQuantity > 0))
-      const oferta = item?.sellers.find((s) => s.commertialOffer?.Price > 0 && s.commertialOffer?.AvailableQuantity > 0)?.commertialOffer
+      const vendedor = item?.sellers.find((s) => s.commertialOffer?.Price > 0 && s.commertialOffer?.AvailableQuantity > 0)
+      const oferta = vendedor?.commertialOffer
       if (!oferta) return null
       return {
         nombre: p.productName,
@@ -84,6 +86,9 @@ async function buscarEnCatalogo(cadena, termino) {
         precioLista: oferta.ListPrice,
         medida: item.measurementUnit,
         multiplicador: item.unitMultiplier,
+        // Para el link que llena el carrito de la tienda.
+        sku: item.itemId,
+        vendedor: vendedor.sellerId,
       }
     })
     .filter(Boolean)
@@ -184,7 +189,7 @@ async function cotizarEnCadena(item, cadena, pais) {
     return {
       lugarId: cadena.id,
       termino,
-      producto: { nombre: elegido.producto.nombre, marca: elegido.producto.marca, url: elegido.producto.url, imagen: elegido.producto.imagen },
+      producto: { nombre: elegido.producto.nombre, marca: elegido.producto.marca, url: elegido.producto.url, imagen: elegido.producto.imagen, sku: elegido.producto.sku, vendedor: elegido.producto.vendedor },
       presentacion: { cantidad: elegido.pres.cantidad, unidad: elegido.pres.unidad, descripcion: elegido.pres.descripcion },
       precio: {
         monto: Math.round(elegido.pres.precio * 100) / 100,
@@ -216,7 +221,7 @@ export async function cotizar(items, usuario = {}) {
     ),
   )
   return {
-    cadenas: cadenas.map(({ id, nombre, web }) => ({ id, nombre, web })),
+    cadenas: cadenas.map(({ id, nombre, web, carrito }) => ({ id, nombre, web, carrito: Boolean(carrito) })),
     cotizaciones,
     sinCatalogo: cadenas.length === 0,
   }
